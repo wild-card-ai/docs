@@ -4,6 +4,23 @@ description: "Integrate and Orchestrate APIs for AI Agents with Wildcard"
 ---
 Wildcard is a developer platform that combines powerful API integrations with intelligent tool selection for AI agents. Today, we provide an interface to 12 popular APIs with 2000+ endpoints, while building towards autonomous tool selection for AI agents.
 
+## Quick Navigation
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Get up and running with Wildcard in minutes
+  </Card>
+  <Card title="Tools Directory" icon="toolbox" href="/tools/overview">
+    Browse our comprehensive collection of API integrations
+  </Card>
+  <Card title="OpenAI Tool Calling" icon="wand-magic-sparkles" href="/tools/openai-tool-calling">
+    Learn how to use Wildcard with OpenAI's function calling
+  </Card>
+  <Card title="Wildcard Chains" icon="link" href="/tools/chains">
+    Build powerful automation chains with multiple API calls
+  </Card>
+</CardGroup>
+
 ## Why Wildcard?
 
 Building AI agents that work with multiple APIs presents key challenges:
@@ -20,17 +37,37 @@ Wildcard solves these by providing:
 ## When to use Wildcard
 
 <CardGroup cols={2}>
-  <Card title="API Integrations" icon="network-wired">
-    You need to integrate multiple APIs quickly with consistent patterns
+  <Card
+    title="API Integrations"
+    icon="network-wired"
+    iconType="duotone"
+    color="#0285c7"
+  >
+    Pre-built integrations with auth handling and response processing
   </Card>
-  <Card title="Agent Development" icon="robot">
-    You're building AI agents that need to interact with multiple services and APIs
+  <Card
+    title="Agent Development"
+    icon="robot"
+    iconType="duotone"
+    color="#16a34a"
+  >
+    Unified interface for AI agents to interact with external services
   </Card>
-  <Card title="Scalability" icon="arrow-up-right-dots">
-    You want infrastructure that grows with you - from basic API integration to autonomous tool selection
+  <Card
+    title="Secure Infrastructure"
+    icon="shield-check"
+    iconType="duotone"
+    color="#dc2626"
+  >
+    Run tools on your own infrastructure for your own security
   </Card>
-  <Card title="Rapid Development" icon="bolt">
-    You want to accelerate development by leveraging pre-built integrations and tools
+  <Card
+    title="Rapid Development"
+    icon="bolt"
+    iconType="duotone"
+    color="#ca8a04"
+  >
+    Accelerate development with ready-to-use tools and patterns
   </Card>
 </CardGroup>
 
@@ -55,7 +92,7 @@ async def send_email():
     return response.processed_response.data
 ```
 
-## Available Integrations
+## Integrations
 
 Wildcard provides robust integrations across different categories:
 
