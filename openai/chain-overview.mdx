@@ -1,0 +1,188 @@
+---
+title: 'Chain Overview'
+description: 'Introduction to Wildcard Chains'
+---
+
+Wildcard Chains provide a powerful way to build complex workflows by connecting multiple tools and LLM operations. This guide introduces the core concepts and architecture of chains.
+
+## Chain Architecture
+
+The chain architecture consists of three main components:
+
+2. **Tool Execution**: Runs tools in sequence or parallel
+   - Handles tool initialization
+   - Manages authentication
+   - Processes tool responses
+
+3. **Response Processing**: Handles results between calls
+   - Standardizes response formats
+   - Extracts relevant data
+   - Manages documents and attachments
+
+4. **Context Management**: Maintains state across the chain
+   - Tracks execution progress
+   - Stores intermediate results
+   - Manages shared context
+
+## Core Components
+
+### Chain Node
+
+A chain node represents a single step in the workflow:
+
+```python
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel
+
+class ChainNode(BaseModel):
+    id: str                                 # Unique identifier
+    name: str                               # Display name
+    prompt: str                             # User message/prompt
+    toolIndex: str                          # API index name
+    selectedService: str                    # API service
+    selectedAction: str                     # Action identifier
+    fixedArgs: Optional[Dict[str, Any]]     # Fixed arguments
+    isLLMOnly: Optional[bool] = False       # LLM-only flag
+```
+
+### Chain Configuration
+
+The chain configuration defines the complete workflow:
+
+```python
+class ChainConfig(BaseModel):
+    nodes: List[ChainNode]                  # Sequence of nodes
+    system_prompt: str                      # System prompt
+```
+
+### Chain Results
+
+Results from chain execution:
+
+```python
+class NodeExecutionResult(BaseModel):
+    node_id: str
+    run_id: Optional[str]
+    status: str  # 'success' | 'error'
+    error: Optional[str]
+    result: Optional[Any]
+
+class ChainExecutionResult(BaseModel):
+    chain_id: str
+    status: str  # 'success' | 'partial' | 'error'
+    node_results: List[NodeExecutionResult]
+    error: Optional[str]
+```
+
+## Key Features
+
+1. **Flexible Node Types**
+   - Tool execution nodes
+   - LLM-only nodes
+   - Hybrid nodes combining both
+
+2. **State Management**
+   - Context sharing between nodes
+   - Result tracking
+   - Error state handling
+
+3. **Authentication**
+   - Per-service authentication
+   - OAuth2 flow management
+   - API key management
+
+4. **Response Processing**
+   - Standardized response format
+   - Document handling
+   - Error normalization
+
+## Common Use Cases
+
+1. **Email Automation**
+   - Process incoming emails
+   - Generate responses
+   - Manage drafts and labels
+
+2. **Project Management**
+   - Create and track issues
+   - Send notifications
+   - Schedule follow-ups
+
+3. **Data Processing**
+   - Fetch and analyze data
+   - Generate reports
+   - Distribute results
+
+4. **Content Management**
+   - Create and review content
+   - Manage approvals
+   - Publish updates
+
+## Getting Started
+
+1. **Installation**
+   ```bash
+   pip install wildcard-openai
+   ```
+
+2. **Basic Chain**
+   ```python
+   from wildcard_openai import WildcardClient
+   from wildcard_core.models import Action
+   
+   async def simple_chain():
+       client = WildcardClient(api_key="your_api_key")
+       
+       # Configure chain
+       config = ChainConfig(
+           system_prompt="Process emails and create summaries",
+           nodes=[
+               ChainNode(
+                   id="list_emails",
+                   name="List Recent Emails",
+                   prompt="List recent project update emails",
+                   toolIndex="gmail",
+                   selectedService="gmail",
+                   selectedAction=Action.Gmail.MESSAGES_LIST
+               ),
+               ChainNode(
+                   id="create_summary",
+                   name="Summarize Updates",
+                   prompt="Create a summary of the updates",
+                   isLLMOnly=True
+               )
+           ]
+       )
+       
+       # Execute chain
+       result = await execute_chain(config, "user123")
+       print(f"Chain status: {result.status}")
+   ```
+
+## Best Practices
+
+1. **Design Principles**
+   - Keep chains focused on specific tasks
+   - Break complex workflows into smaller chains
+   - Use appropriate chain types for different needs
+
+2. **Error Handling**
+   - Implement proper error recovery
+   - Consider partial success scenarios
+   - Log chain execution details
+
+3. **Performance**
+   - Reuse client instances
+   - Implement caching where appropriate
+   - Consider parallel execution
+
+4. **Security**
+   - Manage credentials securely
+   - Validate user permissions
+   - Implement proper rate limiting
+
+## Next Steps
+
+- Learn about [Chain Types](/openai/chain-types)
+- Explore [Chain Execution](/openai/chain-execution)
+- Check out [Chain Examples](/openai/chain-examples) 

@@ -1,0 +1,151 @@
+---
+title: 'OAuth Setup'
+description: 'Configure OAuth2 authentication for Wildcard APIs'
+---
+
+## Overview
+
+Many APIs in Wildcard (Gmail, Google Calendar, Slack, etc.) use OAuth2 for authentication. This guide explains how to set up OAuth2 authentication for your applications.
+
+<Note>
+If you're looking for a hosted auth solution, contact us at [info@wild-card.ai](mailto:info@wild-card.ai).
+</Note>
+
+## Prerequisites
+
+1. An auth server to handle OAuth2 flows with a redirect URL.
+2. OAuth2 App ID and Secret for the API you want to use. You can get these by creating an app in the API's developer console.
+
+## OAuth2 Flow
+
+<Steps>
+  1. **Initialize OAuth Flow**: Your application starts the OAuth process to get an authorization URL
+  2. **User Authorization**: User is redirected to service's authorization consent screen
+  3. **Callback Processing**: Service redirects back with authorization code
+  4. **Token Exchange**: Code is exchanged for access and refresh tokens
+  5. **Token Management**: Pass token details to WildcardClient
+  6. **Notification**: Wildcard interrupts execution when credentials are invalid
+</Steps>
+
+## Implementation
+
+### 1. Initialize OAuth Flow for an `Action`
+
+This snippet shows how you can get OAuth Base URL to start constructing the Authorization Code OAuth flow. See [OAuth2 Authorization Code Flow](https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/) for more information.
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import Action
+from wildcard_core.auth.oauth_helper import OAuth2Flow
+from typing import Set
+
+wildcard_client = WildcardClient(
+    api_key="your_wildcard_api_key",
+    index_name="your_index_name"
+)
+
+# Returns a tuple of the auth flow and scopes for action
+tool_name = Action.Gmail.MESSAGES_SEND
+oauth_flow: OAuth2Flow, scopes: Set[str] = (
+    await wildcard_client.get_oauth_info(tool_name)
+)
+
+# The base OAuth URL to construct an OAuth flow
+# e.g. https://accounts.google.com/o/oauth2/auth
+authorization_url = oauth_flow.authorizationUrl
+```
+
+### 2. Build Authorization URL
+
+Now that we have the base OAuth URL, we can build the full URL to redirect the user to. We use `requests_oauthlib` to build the URL and generate a state parameter with the `secrets` library. 
+
+```python
+import secrets
+from requests_oauthlib import OAuth2Session
+
+# Generate a random state parameter
+state = secrets.token_urlsafe(75)
+
+# URL the user will be redirected to after authorization
+redirect_uri = "https://your-app.com/oauth/callback" 
+
+# Boolean to indicate if PKCE is used. This is required for some services.
+is_pkce = True 
+
+# Construct the full OAuth URL
+oauth = OAuth2Session(
+    client_id=client_id,
+    redirect_uri=redirect_uri,
+    scope=' '.join(scopes),
+    pkce='S256' if is_pkce else None
+)
+
+# Build the full OAuth URL
+auth_url, generated_state = oauth.authorization_url(authorization_url, state=state)
+code_verifier = oauth._code_verifier
+
+# Store this info securely in your database with the user info
+```
+
+### 3. Redirect User to Authorization URL
+
+Pass the generated auth url to your frontend application and redirect the user to it. Here's an example of how you can do this in a frontend React application.
+
+```typescript
+const auth_url = await fetch("https://your-app.com/auth/get_auth_url")
+window.location.href = auth_url
+```
+
+### 4. Handle OAuth Callback
+
+Set up an endpoint to handle the OAuth callback. This endpoint will be called by the service after the user has authorized the app. Store the returned credentials info in your database with the user info.
+
+```python
+@app.route("/auth/callback", methods=["GET"])
+async def handle_oauth_callback(request: Request):
+    # Handle the OAuth callback
+
+    # Get the OAuth completion data from the request
+    completion_data = await get_oauth_completion_data(request)
+
+    # Store the completion data in your database
+    await store_oauth_completion_data(completion_data)
+
+    # Redirect the user to your app's home page
+    return RedirectResponse(url="/")
+```
+
+### 5. Add OAuth Info to WildcardClient before running an Action
+
+Before running an action, you need to add the OAuth info to the WildcardClient. This is done by calling the `register_api_auth` method. Here's an example of how you can do this:
+
+```python
+# Get the credentials from your database
+credentials, auth_type = await get_credentials_for_user(user_id, api_service)
+
+# Check if the credentials are of type API_KEY or OAUTH2
+if auth_type == AuthType.API_KEY:
+    auth_config = ApiKeyAuthConfig(
+        type= AuthType.API_KEY,
+        key_value = credentials
+    )
+else:
+    auth_config = OAuth2AuthConfig(
+        type= AuthType.OAUTH2,
+        token = credentials["access_token"],
+        token_type = credentials["token_type"],
+        refresh_token = credentials["refresh_token"],
+        expires_at=credentials["expires_at"],
+        scopes = credentials["scopes"],
+    )
+
+# Add the auth config to the WildcardClient
+api_service = tool_name.get_api_service()
+wildcard_client.register_api_auth(api_service, auth_config)
+```
+
+## Next Steps
+
+- Learn about [Handling Expired Credentials](/authentication/handling-expired-credentials)
+- Understand [Resuming Executions](/authentication/resuming-executions)
+- Explore [Response Handling](/core/processed-response) 

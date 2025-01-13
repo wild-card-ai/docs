@@ -1,0 +1,77 @@
+---
+title: 'Gmail'
+description: 'Complete email management with Gmail API integration'
+---
+
+Gmail integration in Wildcard provides comprehensive email management capabilities, allowing you to send, receive, and manage emails, drafts, labels, and threads.
+
+## Authentication
+
+Gmail requires OAuth2 authentication. Here are all available scopes:
+
+| Scope | Description | Access Level |
+|-------|-------------|--------------|
+| `https://www.googleapis.com/auth/gmail.modify` | View and modify but not delete your email | Read/Write |
+| `https://www.googleapis.com/auth/gmail.compose` | Create, read, update, and delete drafts. Send messages and drafts | Compose |
+| `https://www.googleapis.com/auth/gmail.send` | Send email on your behalf | Send only |
+| `https://www.googleapis.com/auth/gmail.readonly` | View your email messages and settings | Read only |
+| `https://www.googleapis.com/auth/gmail.metadata` | View your email message metadata such as labels and headers, but not the email body | Metadata |
+| `https://www.googleapis.com/auth/gmail.labels` | Create, read, update, and delete labels only | Labels |
+| `https://www.googleapis.com/auth/gmail.settings.basic` | Manage basic mail settings | Settings |
+| `https://www.googleapis.com/auth/gmail.settings.sharing` | Manage sensitive mail settings, including forwarding and vacation responses | Advanced Settings |
+
+Follow these steps to set up authentication:
+
+1. Follow our [OAuth2 setup guide](/authentication/oauth2) to configure Gmail authentication
+2. Register the OAuth2 credentials with your client.
+
+## Available Actions
+
+Here's a complete list of all available Gmail actions:
+
+| Category | Action | Description |
+|----------|--------|-------------|
+| **Messages** | `MESSAGES_SEND` | Send an email to specified recipients |
+| | `MESSAGES_LIST` | List messages in the mailbox |
+| | `MESSAGES_GET` | Get a specific message |
+| | `MESSAGES_MODIFY` | Modify message labels |
+| | `MESSAGES_TRASH` | Move message to trash |
+| | `MESSAGES_UNTRASH` | Remove message from trash |
+| | `MESSAGES_DELETE` | Permanently delete a message |
+| | `MESSAGES_BATCH_MODIFY` | Modify labels on multiple messages |
+| | `MESSAGES_BATCH_DELETE` | Delete multiple messages |
+| | `MESSAGES_IMPORT` | Import a message (IMAP APPEND style) |
+| | `MESSAGES_INSERT` | Import a message with standard scanning |
+| | `MESSAGES_ATTACHMENTS_GET` | Get a message attachment |
+| **Drafts** | `DRAFTS_CREATE` | Create a new draft |
+| | `DRAFTS_UPDATE` | Update an existing draft |
+| | `DRAFTS_SEND` | Send an existing draft |
+| | `DRAFTS_LIST` | List all drafts |
+| | `DRAFTS_GET` | Get a specific draft |
+| | `DRAFTS_DELETE` | Delete a draft |
+| **Labels** | `LABELS_LIST` | List all labels |
+| | `LABELS_CREATE` | Create a new label |
+| | `LABELS_UPDATE` | Update a label |
+| | `LABELS_PATCH` | Partially update a label |
+| | `LABELS_DELETE` | Delete a label |
+| | `LABELS_GET` | Get label details |
+| **Threads** | `THREADS_LIST` | List email threads |
+| | `THREADS_GET` | Get a specific thread |
+| | `THREADS_MODIFY` | Modify thread labels |
+| | `THREADS_TRASH` | Move thread to trash |
+| | `THREADS_UNTRASH` | Remove thread from trash |
+| | `THREADS_DELETE` | Delete a thread |
+| **Settings** | `GET_PROFILE` | Get user's Gmail profile |
+| | `SETTINGS_GET_VACATION` | Get vacation responder settings |
+| | `SETTINGS_UPDATE_VACATION` | Update vacation responder |
+| | `SETTINGS_GET_AUTO_FORWARDING` | Get auto-forwarding settings |
+| | `SETTINGS_UPDATE_AUTO_FORWARDING` | Update auto-forwarding settings |
+| **History** | `HISTORY_LIST` | Get mailbox change history |
+| **Notifications** | `WATCH` | Set up push notifications |
+| | `STOP` | Stop push notifications |
+
+## Next Steps
+
+- Learn about [OAuth2 Setup](/authentication/oauth2)
+- Explore [Available Actions](/tools/available-actions)
+- Check out [Response Handling](/core/processed-response) 

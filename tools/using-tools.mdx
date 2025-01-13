@@ -1,0 +1,68 @@
+---
+title: "Using Tools"
+description: "Learn how to use Wildcard tools in your applications"
+---
+
+## Adding Individual Tools
+
+Add specific tools to your client. This loads the tool's schema and makes it available for use:
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import Action
+
+client = WildcardClient(api_key="your_wildcard_api_key")
+
+# Add specific Airtable operations you need
+client.add_tool(Action.Airtable.LIST_RECORDS)
+client.add_tool(Action.Airtable.CREATE_RECORD)
+```
+
+## Adding All Tools from an API
+
+Load all available tools from a specific API service. This gives your client access to every endpoint in that API:
+
+```python
+client = WildcardClient(api_key="your_wildcard_api_key")
+
+# Add all Airtable operations (list, create, update, delete records, etc.)
+client.add_tool_by_api(APIService.AIRTABLE)
+```
+
+## Running Tools
+
+Once a tool is added, you can execute it with arguments:
+
+```python
+args = {
+    "base_id": "appXXXXXXXXXXXXXX",
+    "table_name": "Projects"
+}
+response = await client.run_tool_with_args(
+    tool_name=Action.Airtable.LIST_RECORDS,
+    **args
+)
+```
+
+## Tool Formats
+
+When you add tools, Wildcard loads their schemas and converts them to formats that LLMs can understand.
+<Note>
+The Wildcard format is a prompt optimized format that is easy to understand for LLMs.
+</Note>
+
+```python
+from wildcard_openai.WildcardClient import ToolFormat
+
+# Get tools in OpenAI format - converts to OpenAI function schema
+openai_tools = client.get_tools(format=ToolFormat.OPENAI)
+
+# Get tools in Wildcard format - native schema format
+wildcard_tools = client.get_tools(format=ToolFormat.WILDCARD)
+```
+
+## Next Steps
+
+- Learn about [Authentication](/authentication/overview)
+- Explore [Available APIs](/tools/overview)
+- Check out [Response Handling](/core/processed-response) 

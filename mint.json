@@ -1,29 +1,25 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
-  "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
-  },
-  "favicon": "/favicon.svg",
+  "name": "Wildcard",
+  "favicon": "/logo/asterisk.png",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
+    "primary": "#3366cc",
+    "light": "#6699ff",
+    "dark": "#003399",
     "anchors": {
-      "from": "#0D9373",
-      "to": "#07C983"
+      "from": "#003399",
+      "to": "#6699ff"
     }
   },
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:hi@mintlify.com"
+      "url": "mailto:info@wild-card.ai"
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "name": "Get Started",
+    "url": "https://cal.com/kaushik-wildcard/30min"
   },
   "tabs": [
     {
@@ -33,59 +29,81 @@
   ],
   "anchors": [
     {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
-    },
-    {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "name": "Wildcard",
+      "icon": "asterisk",
+      "url": "https://wild-card.ai"
     }
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Getting Started",
       "pages": [
         "introduction",
         "quickstart",
-        "development"
+        "installation"
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Tools",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "tools/tools-directory",
+        "tools/using-tools",
+        "tools/action-class",
+        {
+          "group": "Supported APIs",
+          "pages": [
+            "tools/apis/gmail",
+            "tools/apis/airtable",
+            "tools/apis/brave",
+            "tools/apis/slack",
+            "tools/apis/google-calendar",
+            "tools/apis/youtube",
+            "tools/apis/notion",
+            "tools/apis/twilio",
+            "tools/apis/nyt",
+            "tools/apis/x",
+            "tools/apis/shopify",
+            "tools/apis/salesforce"
+          ]
+        }
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "OpenAI Tool Calling",
       "pages": [
-        "api-reference/introduction"
+        "openai/overview",
+        "openai/wildcard-client"
       ]
     },
     {
-      "group": "Endpoint Examples",
+      "group": "Authentication",
       "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "authentication/overview",
+        "authentication/oauth-setup",
+        "authentication/handling-expired-credentials"
+      ]
+    },
+    {
+      "group": "Structures",
+      "pages": [
+        "core/wildcard-base-client",
+        "core/custom-logging",
+        "core/processed-response",
+        "core/api-schema"
+      ]
+    },
+    {
+      "group": "Wildcard Chains",
+      "pages": [
+        "chains/chain-overview",
+        "chains/chain-types",
+        "chains/chain-examples",
+        "chains/chains-fastapi"
       ]
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/mintlify",
-    "github": "https://github.com/mintlify",
-    "linkedin": "https://linkedin.com/company/mintlify"
+    "x": "https://x.com/wildcard_ai",
+    "linkedin": "https://www.linkedin.com/company/wild-card-ai"
   }
 }

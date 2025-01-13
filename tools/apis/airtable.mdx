@@ -1,0 +1,67 @@
+---
+title: 'Airtable'
+description: 'Interact with Airtable bases, tables, and records'
+---
+
+Airtable integration in Wildcard provides comprehensive management of bases, tables, records, and comments, allowing you to create, read, update, and delete data across your Airtable workspace.
+
+## Authentication
+
+Airtable requires OAuth2 with PKCE authentication. Here are all available scopes:
+
+| Scope | Description | Access Level |
+|-------|-------------|--------------|
+| `data.records:read` | See the data in records | Read only |
+| `data.records:write` | Create, edit, and delete records | Read/Write |
+| `data.recordComments:read` | See comments in records | Read only |
+| `data.recordComments:write` | Create, edit, and delete record comments | Read/Write |
+| `schema.bases:read` | See the structure of a base, like table names or field types | Read only |
+| `schema.bases:write` | Edit the structure of a base, like adding new fields or tables | Read/Write |
+
+Follow these steps to set up authentication:
+
+1. Follow our [OAuth2 setup guide](/authentication/oauth2) to configure Airtable authentication
+2. Register the OAuth2 credentials with your client
+
+## Available Actions
+
+Here's a complete list of all available Airtable actions:
+
+| Category | Action | Description |
+|----------|--------|-------------|
+| **Records** | `RECORDS_LIST` | List records in a table |
+| | `RECORDS_GET` | Get a specific record |
+| | `RECORDS_CREATE` | Create a new record |
+| | `RECORDS_UPDATE` | Update a specific record |
+| | `RECORDS_DELETE` | Delete a specific record |
+| | `RECORDS_UPDATE_MULTIPLE` | Update multiple records |
+| | `RECORDS_REPLACE_MULTIPLE` | Replace multiple records |
+| | `RECORDS_DELETE_MULTIPLE` | Delete multiple records |
+| | `RECORDS_SYNC_CSV` | Sync data from CSV file |
+| | `RECORDS_UPLOAD_ATTACHMENT` | Upload an attachment |
+| **Comments** | `COMMENTS_LIST` | List comments on a record |
+| | `COMMENTS_CREATE` | Create a new comment |
+| | `COMMENTS_UPDATE` | Update a comment |
+| | `COMMENTS_DELETE` | Delete a comment |
+| **Fields** | `FIELDS_CREATE` | Create a new field |
+| | `FIELDS_UPDATE` | Update a field |
+| **Tables** | `TABLES_CREATE` | Create a new table |
+| | `TABLES_UPDATE` | Update a table |
+| **Bases** | `BASES_LIST` | List all accessible bases |
+| | `BASES_SCHEMA` | Get base schema |
+| | `BASES_CREATE` | Create a new base |
+| **Views** | `VIEWS_LIST` | List views in a table |
+| | `VIEWS_GET_METADATA` | Get view metadata |
+| | `VIEWS_DELETE` | Delete a view |
+| **Webhooks** | `WEBHOOKS_LIST` | List webhooks |
+| | `WEBHOOKS_CREATE` | Create webhook |
+| | `WEBHOOKS_DELETE` | Delete webhook |
+| | `WEBHOOKS_REFRESH` | Refresh webhook |
+| | `WEBHOOKS_ENABLE_NOTIFICATIONS` | Enable webhook notifications |
+| | `WEBHOOKS_LIST_PAYLOADS` | List webhook payloads |
+
+## Next Steps
+
+- Learn about [OAuth Setup](/authentication/oauth-setup)
+- Explore [Available Actions](/tools/action-class)
+- Check out [Response Handling](/core/processed-response) 

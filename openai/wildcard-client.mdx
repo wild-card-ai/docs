@@ -1,0 +1,232 @@
+---
+title: 'Wildcard Client'
+description: 'OpenAI-specific client for tool management and execution'
+---
+
+The OpenAI-specific `WildcardClient` extends the base client with features optimized for OpenAI integration. It provides methods for tool format conversion, OpenAI function calling, and response processing.
+
+## Initialization
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.logging.types import WildcardLogger
+
+client = WildcardClient(
+    api_key: str,                   # Your Wildcard API key
+    index_name: str = None,         # Optional API index name
+    webhook_url: str = None,        # OAuth callback URL
+    logger: WildcardLogger = None,  # Custom logger implementation
+    base_url: str = None           # Optional custom API base URL
+)
+```
+
+## Member Variables
+
+- `api_key`: Authentication key for Wildcard API
+- `index_name`: Name of the API index for endpoint discovery
+- `webhook_url`: URL for handling OAuth callbacks
+- `logger`: Custom logger for tracking operations
+- `base_url`: Base URL for API requests
+- `auth_configs`: Dictionary mapping APIService to auth configurations
+- `_tools`: Internal cache of loaded tool definitions
+
+## Core Functions
+
+### Tool Management
+
+<Note>
+The client supports different formats for tool definitions. See [OpenAI Tool Formats](/openai/overview#tool-formats).
+</Note>
+
+```python
+async def add_tool(
+    self,
+    tool_name: Action,
+    fixed_args: Dict[str, Any] = None
+) -> None:
+    """
+    Add a specific tool to the client.
+    
+    Args:
+        tool_name: Action enum representing the tool
+        fixed_args: Optional dictionary of arguments to always include
+    """
+
+async def add_tool_by_api(
+    self,
+    api_service: APIService
+) -> None:
+    """
+    Add all tools from a specific API service.
+    
+    Args:
+        api_service: Enum representing the API service
+    """
+
+def get_tool(
+    self,
+    tool_name: Action,
+    format: ToolFormat = ToolFormat.OPENAI
+) -> Union[Dict, str]:
+    """
+    Get tool definition in specified format.
+    
+    Args:
+        tool_name: Action enum representing the tool
+        format: Format to return the tool in (OPENAI or WILDCARD)
+    
+    Returns:
+        Tool definition in requested format
+    """
+
+def get_tools(
+    self,
+    format: ToolFormat = ToolFormat.OPENAI
+) -> List[Union[Dict, str]]:
+    """
+    Get all loaded tools in specified format.
+    
+    Args:
+        format: Format to return tools in (OPENAI or WILDCARD)
+    
+    Returns:
+        List of tool definitions
+    """
+
+async def get_tool_prompt(
+    self,
+    tool_name: Action
+) -> str:
+    """
+    Get optimized prompt for a specific tool.
+    
+    Args:
+        tool_name: Action enum representing the tool
+    
+    Returns:
+        Formatted prompt string for the tool
+    """
+```
+
+### Authentication
+
+```python
+async def register_api_auth(
+    self,
+    api_service: APIService,
+    auth_config: Dict[str, Any]
+) -> None:
+    """
+    Register authentication for an API service.
+    
+    Args:
+        api_service: Enum representing the API service
+        auth_config: Authentication configuration dictionary
+    """
+
+async def get_auth_status(
+    self,
+    tool_name: Action
+) -> Tuple[AuthStatus, Optional[APISchema]]:
+    """
+    Check authentication status for a tool.
+    
+    Args:
+        tool_name: Action enum representing the tool
+    
+    Returns:
+        Tuple of (AuthStatus, APISchema if available)
+    """
+```
+
+### Tool Execution
+
+```python
+async def run_tool_with_args(
+    self,
+    tool_name: Action,
+    **kwargs
+) -> ProcessedResponse:
+    """
+    Execute a tool with provided arguments.
+    
+    Args:
+        tool_name: Action enum representing the tool
+        **kwargs: Tool-specific arguments
+    
+    Returns:
+        Processed response from the tool
+    """
+
+async def run_tools(
+    self,
+    completion: ChatCompletion,
+    context: Dict[str, Any] = None
+) -> ProcessedResponse:
+    """
+    Execute tools from OpenAI completion.
+    
+    Args:
+        completion: OpenAI chat completion response
+        context: Optional context dictionary
+    
+    Returns:
+        Processed response from tool execution
+    """
+```
+
+## Error Handling
+
+The client throws several types of exceptions:
+
+```python
+from wildcard_core.errors import (
+    AuthenticationError,    # Authentication issues
+    ToolExecutionError,     # Tool execution failures
+    ValidationError,        # Invalid arguments
+    RateLimitError,        # API rate limits
+    ToolNotFoundError      # Unknown tool requested
+)
+
+try:
+    result = await client.run_tools(completion)
+except AuthenticationError as e:
+    # Handle authentication issues
+    print(f"Auth failed: {e.message}")
+    if e.auth_info:
+        print(f"Required scopes: {e.auth_info.required_scopes}")
+except ToolExecutionError as e:
+    # Handle execution failures
+    print(f"Tool failed: {e.message}")
+    print(f"Response: {e.response}")
+except ValidationError as e:
+    # Handle invalid arguments
+    print(f"Invalid args: {e.validation_errors}")
+```
+
+## Best Practices
+
+1. **Client Initialization**
+   - Initialize once per unique user or session in your application
+   - Set appropriate index_name as provided by Wildcard
+   - Implement custom logging if needed
+
+2. **Tool Management**
+   - Cache tool definitions when possible
+   - Use add_tool_by_api for bulk loading
+   - Validate tool existence before execution
+
+3. **Authentication**
+   - Check auth status before running tools
+   - Handle OAuth flows appropriately
+   - Store auth configs securely
+
+4. **Response Handling**
+   - Check for errors
+   - Process documents appropriately
+
+## Next Steps
+
+- Learn about [Wildcard Chains](/chains/overview)
+- Explore [Response Handling](/core/processed-response)
+- Check out [Available APIs](/tools/overview) 

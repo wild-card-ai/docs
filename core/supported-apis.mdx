@@ -1,0 +1,166 @@
+---
+title: 'Supported APIs'
+description: 'Overview of all APIs supported by Wildcard'
+---
+
+Wildcard supports a growing list of popular APIs, each with comprehensive endpoint coverage. Here's a detailed overview of currently supported services.
+
+## Available APIs
+
+<CardGroup cols={2}>
+  <Card title="Gmail" icon="envelope">
+    Complete email management including sending, reading, and organizing emails
+  </Card>
+  <Card title="Airtable" icon="table">
+    Database operations, record management, and view controls
+  </Card>
+  <Card title="Slack" icon="slack">
+    Message sending, channel management, and user interactions
+  </Card>
+  <Card title="GitHub" icon="github">
+    Repository management, issue tracking, and pull requests
+  </Card>
+  <Card title="Google Calendar" icon="calendar">
+    Event scheduling, calendar management, and availability checking
+  </Card>
+  <Card title="Spotify" icon="spotify">
+    Music playback control, playlist management, and track information
+  </Card>
+  <Card title="YouTube" icon="youtube">
+    Video management, channel operations, and comment handling
+  </Card>
+  <Card title="Notion" icon="n">
+    Document creation, database management, and page operations
+  </Card>
+  <Card title="Discord" icon="discord">
+    Message sending, server management, and user interactions
+  </Card>
+  <Card title="Twilio" icon="message">
+    SMS messaging and communication services
+  </Card>
+  <Card title="New York Times" icon="newspaper">
+    Article search and content retrieval
+  </Card>
+  <Card title="Brave Search" icon="search">
+    Web search and content discovery
+  </Card>
+</CardGroup>
+
+## API Service Enum
+
+Use the `APIService` enum to reference supported services:
+
+```python
+from wildcard_core.models import APIService
+
+# Available services
+APIService.GMAIL
+APIService.AIRTABLE
+APIService.SLACK
+APIService.GITHUB
+APIService.GOOGLE_CALENDAR
+APIService.SPOTIFY
+APIService.YOUTUBE
+APIService.NOTION
+APIService.DISCORD
+APIService.TWILIO
+APIService.NEW_YORK_TIMES
+APIService.BRAVE_SEARCH
+```
+
+## Authentication Methods
+
+Different APIs require different authentication methods:
+
+<AccordionGroup>
+  <Accordion title="OAuth2 APIs">
+    - Gmail
+    - Google Calendar
+    - Spotify
+    - GitHub
+    - Slack
+    - Discord
+  </Accordion>
+  <Accordion title="API Key APIs">
+    - New York Times
+    - Brave Search
+    - Twilio
+  </Accordion>
+  <Accordion title="Bearer Token APIs">
+    - Notion
+  </Accordion>
+</AccordionGroup>
+
+## Detailed API Coverage
+
+### Gmail
+- **Messages**: Send, receive, list, and manage emails
+- **Drafts**: Create, update, and manage draft emails
+- **Labels**: Organize emails with custom labels
+- **Threads**: Manage email conversations
+- **History**: Track mailbox changes
+- **Settings**: Configure email settings
+
+### Airtable
+- **Records**: CRUD operations on table records
+- **Fields**: Manage table structure
+- **Views**: Create and manage different views
+- **Attachments**: Handle file attachments
+- **Comments**: Collaborate on records
+- **Webhooks**: Set up real-time notifications
+
+### Slack
+- **Messages**: Send and manage channel messages
+- **Channels**: Create and manage channels
+- **Users**: User management and information
+- **Files**: Share and manage files
+- **Reactions**: Handle message reactions
+- **Search**: Search messages and files
+
+## Example Usage
+
+Here's how to use different APIs with Wildcard:
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
+from wildcard_core.models import APIService
+
+async def main():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Gmail Example
+    await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_SEND,
+        to="recipient@example.com",
+        subject="Hello",
+        body="Test email"
+    )
+    
+    # Airtable Example
+    await client.run_tool_with_args(
+        tool_name=Action.Airtable.RECORDS_LIST,
+        base_id="your_base_id",
+        table_name="your_table"
+    )
+    
+    # Slack Example
+    await client.run_tool_with_args(
+        tool_name=Action.Slack.CHAT_POST_MESSAGE,
+        channel="general",
+        text="Hello from Wildcard!"
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Adding New APIs
+
+Wildcard is constantly expanding its API support. Check our [changelog](https://changelog.wildcard.com) for updates on newly added APIs and endpoints.
+
+## Next Steps
+
+- Learn about [Custom Logging](/core/custom-logging)
+- Explore [OpenAI Integration](/openai/overview)
+- Check out [Response Handling](/core/processed-response) 

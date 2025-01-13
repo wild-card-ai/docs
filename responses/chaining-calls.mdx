@@ -1,0 +1,297 @@
+---
+title: 'Chaining Calls'
+description: 'Learn how to chain multiple tool calls for complex workflows'
+---
+
+Wildcard supports chaining multiple tool calls together to create complex workflows. This guide explains how to effectively chain calls and manage their responses.
+
+## Chain Architecture
+
+<Frame>
+  ![Chain Architecture](/images/chain-architecture.png)
+</Frame>
+
+The chain architecture consists of:
+1. **Planning LLM**: Determines the sequence of tools to use
+2. **Tool Execution**: Runs tools in sequence or parallel
+3. **Response Processing**: Handles results between calls
+4. **Context Management**: Maintains state across the chain
+
+## Basic Chaining
+
+### Sequential Calls
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
+
+async def email_with_attachment():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # First call: Create a draft
+    draft_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_CREATE,
+        to="recipient@example.com",
+        subject="Document Attached",
+        body="Please find the document attached."
+    )
+    
+    # Get draft ID from response
+    draft_id = draft_response.processed_response.data['id']
+    
+    # Second call: Add attachment
+    updated_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_UPDATE,
+        id=draft_id,
+        attachments=[{
+            "filename": "document.pdf",
+            "content": "base64_content..."
+        }]
+    )
+    
+    # Final call: Send the draft
+    sent_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_SEND,
+        id=draft_id
+    )
+    
+    return sent_response
+```
+
+### Parallel Calls
+
+```python
+import asyncio
+
+async def fetch_multiple_sources():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Create tasks for parallel execution
+    tasks = [
+        client.run_tool_with_args(
+            tool_name=Action.Gmail.MESSAGES_LIST,
+            q="important"
+        ),
+        client.run_tool_with_args(
+            tool_name=Action.Slack.MESSAGES_LIST,
+            channel="general"
+        ),
+        client.run_tool_with_args(
+            tool_name=Action.Discord.MESSAGES_LIST,
+            channel_id="123456"
+        )
+    ]
+    
+    # Execute tasks in parallel
+    responses = await asyncio.gather(*tasks)
+    
+    return {
+        "email": responses[0].processed_response.data,
+        "slack": responses[1].processed_response.data,
+        "discord": responses[2].processed_response.data
+    }
+```
+
+## Advanced Chaining
+
+### Conditional Chains
+
+```python
+async def smart_email_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Check email thread
+    thread_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.THREADS_GET,
+        id="thread_123"
+    )
+    
+    # Analyze thread and decide next action
+    if len(thread_response.processed_response.data['messages']) > 5:
+        # Create summary email
+        await client.run_tool_with_args(
+            tool_name=Action.Gmail.MESSAGES_SEND,
+            to="team@example.com",
+            subject="Thread Summary",
+            body=f"Summary of discussion: {summarize_thread(thread_response)}"
+        )
+    else:
+        # Continue thread
+        await client.run_tool_with_args(
+            tool_name=Action.Gmail.MESSAGES_SEND,
+            to="team@example.com",
+            subject="Re: Discussion",
+            body="Continuing the discussion..."
+        )
+```
+
+### Error Recovery Chains
+
+```python
+async def resilient_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    
+    try:
+        # Try primary action
+        response = await client.run_tool_with_args(
+            tool_name=Action.Gmail.MESSAGES_SEND,
+            to="recipient@example.com",
+            subject="Important Update"
+        )
+    except Exception as e:
+        # Fallback to alternative communication
+        if isinstance(e, OAuthCredentialsRequiredException):
+            # Use alternative messaging service
+            response = await client.run_tool_with_args(
+                tool_name=Action.Slack.CHAT_POST_MESSAGE,
+                channel="general",
+                text="Important Update"
+            )
+        else:
+            raise e
+```
+
+## Chain Management
+
+### State Management
+
+```python
+class ChainState:
+    def __init__(self):
+        self.context = {}
+        self.results = []
+    
+    def update_context(self, key: str, value: Any):
+        self.context[key] = value
+    
+    def add_result(self, result: ProcessedResponse):
+        self.results.append(result)
+    
+    def get_context(self, key: str) -> Any:
+        return self.context.get(key)
+
+async def managed_chain():
+    client = WildcardClient(api_key="your_api_key")
+    state = ChainState()
+    
+    # First call
+    response1 = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_LIST
+    )
+    state.add_result(response1)
+    
+    # Update context
+    state.update_context('message_count', 
+        len(response1.processed_response.data['messages']))
+    
+    # Use context in next call
+    if state.get_context('message_count') > 10:
+        response2 = await client.run_tool_with_args(
+            tool_name=Action.Gmail.LABELS_CREATE,
+            name="High Volume"
+        )
+        state.add_result(response2)
+```
+
+### Response Processing
+
+```python
+class ChainProcessor:
+    def __init__(self):
+        self.processors = {
+            'gmail': self._process_gmail,
+            'slack': self._process_slack
+        }
+    
+    async def process_response(self, response: ProcessedResponse, chain_state: ChainState):
+        # Get appropriate processor
+        processor = self.processors.get(response.source)
+        if processor:
+            processed = await processor(response)
+            chain_state.update_context('last_processed', processed)
+            return processed
+    
+    async def _process_gmail(self, response: ProcessedResponse):
+        # Process Gmail-specific response
+        pass
+    
+    async def _process_slack(self, response: ProcessedResponse):
+        # Process Slack-specific response
+        pass
+```
+
+## Complex Workflow Example
+
+```python
+async def complex_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    state = ChainState()
+    processor = ChainProcessor()
+    
+    # 1. Get email thread
+    thread = await client.run_tool_with_args(
+        tool_name=Action.Gmail.THREADS_GET,
+        id="thread_123"
+    )
+    state.add_result(thread)
+    
+    # 2. Process attachments in parallel
+    if thread.processed_response.documents:
+        attachment_tasks = []
+        for doc in thread.processed_response.documents:
+            task = process_attachment(client, doc)
+            attachment_tasks.append(task)
+        
+        attachment_results = await asyncio.gather(*attachment_tasks)
+        state.update_context('processed_attachments', attachment_results)
+    
+    # 3. Create summary
+    summary = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_CREATE,
+        to="team@example.com",
+        subject="Thread Summary",
+        body=generate_summary(state)
+    )
+    
+    # 4. Add processed attachments
+    if state.get_context('processed_attachments'):
+        await client.run_tool_with_args(
+            tool_name=Action.Gmail.DRAFTS_UPDATE,
+            id=summary.processed_response.data['id'],
+            attachments=state.get_context('processed_attachments')
+        )
+    
+    # 5. Send final email
+    return await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_SEND,
+        id=summary.processed_response.data['id']
+    )
+```
+
+## Best Practices
+
+1. **Chain Design**
+   - Keep chains focused and modular
+   - Handle errors at each step
+   - Maintain clear state management
+
+2. **Performance**
+   - Use parallel execution when possible
+   - Minimize unnecessary API calls
+   - Cache frequently used results
+
+3. **Error Handling**
+   - Implement fallback options
+   - Maintain chain integrity
+   - Log chain progress
+
+4. **State Management**
+   - Use clear state structures
+   - Implement proper cleanup
+   - Track chain progress
+
+## Next Steps
+
+- Explore [OpenAI Integration](/openai/overview)
+- Learn about [Document Handling](/responses/document-handling)
+- Check out [RAG Integration](/responses/rag-integration) 

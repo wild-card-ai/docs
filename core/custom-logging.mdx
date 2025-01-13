@@ -1,0 +1,107 @@
+---
+title: 'Wildcard Logger'
+description: 'Implement custom logging for Wildcard operations'
+---
+
+Wildcard provides a flexible logging system that allows you to track and monitor all operations. You can implement custom loggers to integrate with your existing logging infrastructure.
+
+## Logger Interface
+
+The `WildcardLogger` interface defines the contract for custom loggers:
+
+```python
+from typing import Any
+from wildcard_core.logging.types import WildcardLogger
+
+class CustomLogger(WildcardLogger):
+    def log(self, event_type: str, data: Any) -> None:
+        """
+        Log an event with associated data.
+        
+        Args:
+            event_type: Type of event being logged
+            data: Data associated with the event
+        """
+        pass
+```
+
+## Event Types
+
+Wildcard logs various events throughout its operation:
+
+**Input Events**
+- `inputs`: Input validation and processing
+
+**Server Events**
+- `server_spec`: Server specification loading
+- `api_schema`: API schema processing
+
+**Tool Events**
+- `wildcard_tool_def`: Wildcard tool definition processing
+- `openai_tool_def`: OpenAI tool definition processing
+- `tool_args`: Tool argument processing
+
+**Authentication Events**
+- `auth_config`: Authentication configuration
+
+**Request/Response Events**
+- `request`: API request details
+- `response`: Raw API response
+- `processed_response`: Processed API response
+
+## Example: Custom Logger
+
+Here's a complete example of a custom logger
+
+```python
+import logging
+from datetime import datetime
+from typing import Any
+from wildcard_core.logging.types import WildcardLogger
+
+class CustomLogger(WildcardLogger):
+    def __init__(self):
+        # Configure standard Python logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        self.logger = logging.getLogger("wildcard")
+    
+    def log(self, event_type: str, data: Any) -> None:
+        # Create structured log entry
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": event_type,
+            "data": data
+        }
+        
+        # Log based on event type
+        if event_type.endswith("_error"):
+            self.logger.error(log_entry)
+        else:
+            self.logger.info(log_entry)
+```
+
+## Using Custom Loggers
+
+Attach your custom logger when initializing the client:
+
+```python
+from wildcard_core.client import WildcardClient
+
+# Initialize custom logger
+logger = CustomLogger()
+
+# Attach to client
+client = WildcardClient(
+    api_key="your_api_key",
+    logger=logger
+)
+```
+
+## Next Steps
+
+- Explore [OpenAI Integration](/openai/overview)
+- Learn about [Response Handling](/core/processed-response)
+- Check out [Chain Architecture](/openai/chain-architecture) 

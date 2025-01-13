@@ -1,0 +1,84 @@
+---
+title: 'Chain Overview'
+description: 'Introduction to building chains on top of Wildcard SDK'
+---
+
+Chains are a way to use Wildcard to build complex workflows by connecting multiple tools and LLM operations. Chains are not in the Wildcard SDK, but presented here as a common pattern for building workflows.
+
+## Chain Architecture
+
+1. **Tool Execution**: Runs tools in sequence or parallel
+2. **Response Processing**: Handles results between calls
+3. **Context Management**: Maintains state across the chain
+
+## Core Components
+
+### Chain Node
+
+A chain node represents a single step in the workflow:
+
+```python
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel
+
+class ChainNode(BaseModel):
+    id: str                                 # Unique identifier
+    name: str                               # Display name
+    prompt: str                             # User message/prompt
+    toolIndex: str                          # API index name
+    selectedService: str                    # API service
+    selectedAction: str                     # Action identifier
+    fixedArgs: Optional[Dict[str, Any]]     # Fixed arguments
+    isLLMOnly: Optional[bool] = False       # LLM-only flag
+```
+
+### Chain Configuration
+
+The chain configuration defines the complete workflow:
+
+```python
+class ChainConfig(BaseModel):
+    nodes: List[ChainNode]                  # Sequence of nodes
+    system_prompt: str                      # System prompt
+```
+
+### Chain Results
+
+Results from chain execution:
+
+```python
+class NodeExecutionResult(BaseModel):
+    node_id: str
+    run_id: Optional[str]
+    status: str  # 'success' | 'error'
+    error: Optional[str]
+    result: Optional[Any]
+
+class ChainExecutionResult(BaseModel):
+    chain_id: str
+    status: str  # 'success' | 'partial' | 'error'
+    node_results: List[NodeExecutionResult]
+    error: Optional[str]
+```
+
+## Best Practices
+
+1. **Design Principles**
+   - Keep chains focused on specific tasks
+   - Break complex workflows into smaller chains
+   - Use appropriate chain types for different needs
+
+2. **Error Handling**
+   - Implement proper error recovery
+   - Consider partial success scenarios
+   - Log chain execution details
+
+3. **Performance**
+   - Reuse client instances
+   - Consider parallel execution
+
+## Next Steps
+
+- Learn about [Chain Types](/chains/chain-types)
+- Explore [Chain Execution](/chains/chain-execution)
+- Check out [Chain Examples](/chains/chain-examples) 

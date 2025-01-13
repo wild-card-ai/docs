@@ -1,0 +1,277 @@
+---
+title: 'Document Handling'
+description: 'Working with documents and attachments in Wildcard responses'
+---
+
+Wildcard provides robust support for handling documents, attachments, and other binary data returned by API tools. This guide explains how to work with different types of documents and implement proper document management.
+
+## Document Types
+
+Documents in Wildcard responses can come in several forms:
+
+```python
+class Document(BaseModel):
+    type: str  # attachment, image, text, etc.
+    name: str  # filename or identifier
+    mime_type: str  # MIME type of the content
+    content: Optional[str]  # Base64 encoded content
+    url: Optional[str]  # URL for downloadable content
+    metadata: Optional[dict]  # Additional document info
+```
+
+### Common Document Types
+
+<CardGroup cols={2}>
+  <Card title="Attachments" icon="file">
+    Files attached to emails, messages, or records
+  </Card>
+  <Card title="Images" icon="image">
+    Image files from various sources
+  </Card>
+  <Card title="Text Content" icon="file-lines">
+    Text documents and formatted content
+  </Card>
+  <Card title="Media Files" icon="film">
+    Audio and video content
+  </Card>
+</CardGroup>
+
+## Handling Documents
+
+### Basic Document Processing
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
+import base64
+import os
+
+async def process_documents():
+    client = WildcardClient(api_key="your_api_key")
+    
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_GET,
+        id="msg_123"
+    )
+    
+    if response.processed_response.documents:
+        for doc in response.processed_response.documents:
+            # Handle based on document type
+            if doc['type'] == 'attachment':
+                handle_attachment(doc)
+            elif doc['type'] == 'image':
+                handle_image(doc)
+            elif doc['type'] == 'text':
+                handle_text(doc)
+
+def handle_attachment(doc):
+    """Handle file attachments"""
+    if doc.get('content'):
+        # Save base64 content
+        save_base64_content(doc['content'], doc['name'])
+    elif doc.get('url'):
+        # Download from URL
+        download_file(doc['url'], doc['name'])
+
+def handle_image(doc):
+    """Handle image files"""
+    if doc.get('content'):
+        # Process image data
+        process_image_content(doc)
+    elif doc.get('url'):
+        # Download and process image
+        download_and_process_image(doc)
+
+def handle_text(doc):
+    """Handle text content"""
+    if doc.get('content'):
+        # Process text content
+        text = base64.b64decode(doc['content']).decode('utf-8')
+        process_text_content(text)
+```
+
+### Saving Documents
+
+```python
+import aiohttp
+import aiofiles
+import os
+
+async def save_documents(documents: List[dict], output_dir: str):
+    """Save documents to specified directory"""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for doc in documents:
+        output_path = os.path.join(output_dir, doc['name'])
+        
+        if doc.get('content'):
+            # Save base64 content
+            async with aiofiles.open(output_path, 'wb') as f:
+                content = base64.b64decode(doc['content'])
+                await f.write(content)
+        
+        elif doc.get('url'):
+            # Download from URL
+            async with aiohttp.ClientSession() as session:
+                async with session.get(doc['url']) as response:
+                    if response.status == 200:
+                        async with aiofiles.open(output_path, 'wb') as f:
+                            await f.write(await response.read())
+```
+
+### Document Metadata
+
+```python
+def process_document_metadata(doc: dict):
+    """Process document metadata"""
+    metadata = doc.get('metadata', {})
+    
+    # Get common metadata
+    file_size = metadata.get('size')
+    created_at = metadata.get('created_at')
+    modified_at = metadata.get('modified_at')
+    author = metadata.get('author')
+    
+    # Handle specific document types
+    if doc['type'] == 'image':
+        dimensions = metadata.get('dimensions')
+        format = metadata.get('format')
+    elif doc['type'] == 'attachment':
+        original_name = metadata.get('original_name')
+        content_type = metadata.get('content_type')
+```
+
+## Integration with Storage Systems
+
+### Local File System
+
+```python
+class LocalFileStorage:
+    def __init__(self, base_dir: str):
+        self.base_dir = base_dir
+        os.makedirs(base_dir, exist_ok=True)
+    
+    async def save_document(self, doc: dict):
+        path = os.path.join(self.base_dir, doc['name'])
+        
+        if doc.get('content'):
+            async with aiofiles.open(path, 'wb') as f:
+                content = base64.b64decode(doc['content'])
+                await f.write(content)
+        
+        return path
+```
+
+### Cloud Storage (AWS S3)
+
+```python
+import boto3
+from botocore.exceptions import ClientError
+
+class S3Storage:
+    def __init__(self, bucket_name: str):
+        self.s3 = boto3.client('s3')
+        self.bucket = bucket_name
+    
+    async def save_document(self, doc: dict):
+        try:
+            if doc.get('content'):
+                content = base64.b64decode(doc['content'])
+                self.s3.put_object(
+                    Bucket=self.bucket,
+                    Key=doc['name'],
+                    Body=content,
+                    ContentType=doc['mime_type']
+                )
+            elif doc.get('url'):
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(doc['url']) as response:
+                        content = await response.read()
+                        self.s3.put_object(
+                            Bucket=self.bucket,
+                            Key=doc['name'],
+                            Body=content,
+                            ContentType=doc['mime_type']
+                        )
+            
+            return f"s3://{self.bucket}/{doc['name']}"
+        
+        except ClientError as e:
+            print(f"Error saving to S3: {e}")
+            raise
+```
+
+## Best Practices
+
+1. **Memory Management**
+   - Stream large files instead of loading them into memory
+   - Clean up temporary files after processing
+   - Use chunked processing for large documents
+
+2. **Error Handling**
+   - Validate document content before processing
+   - Handle download failures gracefully
+   - Implement retry logic for failed operations
+
+3. **Security**
+   - Validate file types and content
+   - Scan for malware when necessary
+   - Implement proper access controls
+
+4. **Performance**
+   - Use async operations for I/O operations
+   - Implement parallel processing for multiple documents
+   - Cache frequently accessed documents
+
+## Example: Complete Document Handler
+
+```python
+from typing import List, Optional
+from pydantic import BaseModel
+import aiohttp
+import aiofiles
+import base64
+import os
+
+class DocumentHandler:
+    def __init__(self, storage_dir: str):
+        self.storage_dir = storage_dir
+        os.makedirs(storage_dir, exist_ok=True)
+    
+    async def process_documents(self, documents: List[dict]):
+        """Process multiple documents in parallel"""
+        tasks = [self.process_document(doc) for doc in documents]
+        return await asyncio.gather(*tasks)
+    
+    async def process_document(self, doc: dict):
+        """Process a single document"""
+        try:
+            # Validate document
+            if not self._validate_document(doc):
+                raise ValueError(f"Invalid document: {doc['name']}")
+            
+            # Process based on type
+            if doc['type'] == 'attachment':
+                return await self._handle_attachment(doc)
+            elif doc['type'] == 'image':
+                return await self._handle_image(doc)
+            elif doc['type'] == 'text':
+                return await self._handle_text(doc)
+            else:
+                raise ValueError(f"Unsupported document type: {doc['type']}")
+        
+        except Exception as e:
+            print(f"Error processing document {doc['name']}: {e}")
+            return None
+    
+    def _validate_document(self, doc: dict) -> bool:
+        """Validate document structure and content"""
+        required_fields = ['type', 'name', 'mime_type']
+        return all(field in doc for field in required_fields)
+```
+
+## Next Steps
+
+- Explore [RAG Integration](/responses/rag-integration)
+- Learn about [Chaining Calls](/responses/chaining-calls)
+- Check out [OpenAI Integration](/openai/overview) 

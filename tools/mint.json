@@ -1,0 +1,114 @@
+{"name": "Wildcard",
+ "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:info@wild-card.ai"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://dashboard.wild-card.ai"
+  },
+  "anchors": [
+    {
+      "name": "API Reference",
+      "icon": "rectangle-terminal",
+      "url": "api-reference"
+    },
+    {
+      "name": "Changelog",
+      "icon": "list",
+      "url": "https://wild-card.ai/changelog"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "installation"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "core/api-schema",
+        "core/wildcard-base-client",
+        "core/custom-logging"
+      ]
+    },
+    {
+      "group": "Authentication",
+      "pages": [
+        "authentication/overview",
+        "authentication/oauth-setup",
+        "authentication/handling-expired-credentials"
+      ]
+    },
+    {
+      "group": "Tools",
+      "pages": [
+        "tools/tools-directory",
+        "tools/using-tools",
+        {
+          "group": "Available APIs",
+          "pages": [
+            "tools/apis/gmail",
+            "tools/apis/airtable",
+            "tools/apis/slack",
+            "tools/apis/shopify", 
+            "tools/apis/google-calendar",
+            "tools/apis/youtube",
+            "tools/apis/notion",
+            "tools/apis/twilio",
+            "tools/apis/nyt",
+            "tools/apis/brave-search",
+            "tools/apis/x",
+            "tools/apis/salesforce"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Chains",
+      "pages": [
+        "chains/chain-overview",
+        "chains/chain-types",
+        "chains/chain-examples"
+      ]
+    },
+    {
+      "group": "OpenAI Integration",
+      "pages": [
+        "openai/overview",
+        "openai/wildcard-client"
+      ]
+    },
+    {
+      "group": "Response Handling",
+      "pages": [
+        "responses/processed-response"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/wildcardai",
+    "github": "https://github.com/wildcardai",
+    "linkedin": "https://www.linkedin.com/company/wildcardai"
+  }
+} 

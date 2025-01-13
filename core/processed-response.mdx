@@ -1,0 +1,125 @@
+---
+title: "Processed Response"
+description: "Understanding Wildcard's response format and handling"
+---
+
+The `ProcessedResponse` is Wildcard's standardized format for tool execution results. It provides a consistent way to handle responses from different APIs and includes support for various data types, attachments, and metadata.
+
+## Response Structure
+
+```python
+class ProcessedResponse(BaseModel):
+    response: Any
+    """The original response from the tool"""
+    
+    processed_response: ProcessedResponseData
+    """The processed response from the tool"""
+
+class ProcessedResponseData(BaseModel):
+    data: Any
+    """The main response data from the API"""
+    
+    documents: Optional[List[dict]] = None
+    """Associated files, attachments, or additional context"""
+```
+
+## Response Types
+
+### Standard Data Response
+
+Basic response with just data:
+
+```python
+{
+    "data": {
+        "id": "123",
+        "name": "Example",
+        "status": "success"
+    }
+}
+```
+
+### Response with Documents
+
+Response including attachments or files:
+
+```python
+{
+    "data": {
+        "message_id": "msg_123",
+        "subject": "Document Attached"
+    },
+    "documents": [
+        {
+            "type": "attachment",
+            "name": "report.pdf",
+            "content": "base64_encoded_content...",
+            "mime_type": "application/pdf"
+        },
+        {
+            "type": "image",
+            "name": "chart.png",
+            "url": "https://example.com/chart.png",
+            "mime_type": "image/png"
+        }
+    ]
+}
+```
+
+### Response with Metadata
+
+Response with additional context:
+
+```python
+{
+    "data": {
+        "results": ["item1", "item2"]
+    },
+    "metadata": {
+        "total_count": 100,
+        "page": 1,
+        "has_more": true,
+        "next_cursor": "next_page_token"
+    }
+}
+```
+
+## Working with Responses
+
+### Basic Response Handling
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
+
+async def handle_response():
+    client = WildcardClient(api_key="your_api_key")
+    
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_GET,
+        id="msg_123"
+    )
+    
+    # Access the main data
+    message_data = response.processed_response.data
+    print(f"Subject: {message_data['subject']}")
+    
+    # Check for attachments
+    if response.processed_response.documents:
+        for doc in response.processed_response.documents:
+            print(f"Attachment: {doc['name']}")
+```
+
+## Best Practices
+
+1. **Always Check for Errors**: Check the error field before processing data
+2. **Handle Pagination**: Use metadata for proper pagination handling
+3. **Document Management**: Process documents based on their type and content
+4. **Type Safety**: Use type hints and pydantic models for better code safety
+5. **Memory Management**: Be careful with large document content in memory
+
+## Next Steps
+
+- Check out [Chaining Calls](/chains/chaining-calls) 
+- Learn about [OAuth Setup](/authentication/oauth-setup)
+- Explore [OpenAI Wildcard Client](/openai/overview)

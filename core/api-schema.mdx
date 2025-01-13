@@ -1,0 +1,160 @@
+---
+title: "API Types"
+description: "Understanding Wildcard's core data models and schemas"
+---
+
+## API Schema
+
+The `APISchema` model represents the complete schema for an API service:
+
+```python
+class APISchema(BaseModel):
+    id: APIService
+    """Unique identifier for the API service"""
+    
+    name: str
+    """Display name of the API"""
+    
+    description: Optional[str] = None
+    """Detailed description of the API service"""
+    
+    base_url: Optional[str] = None
+    """Base URL for API requests"""
+    
+    endpoints: Optional[List[EndpointSchema]] = None
+    """List of available endpoints"""
+    
+    version: Optional[str] = None
+    """API version"""
+    
+    securitySchemes: Optional[Dict[str, SecuritySchemeUnion]] = None
+    """Authentication schemes supported by the API"""
+    
+    tags: Optional[List[APITag]] = None
+    """Categorization tags"""
+    
+    servers: Optional[List[Server]] = None
+    """Server configurations"""
+    
+    info: Optional[APIInfo] = None
+    """Additional API information"""
+```
+
+### EndpointSchema
+
+Each endpoint in the API is described by the `EndpointSchema`:
+
+```python
+class EndpointSchema(BaseModel):
+    endpoint_id: str
+    """Unique identifier for the endpoint"""
+    
+    path: str
+    """URL path for the endpoint"""
+    
+    method: Literal["get", "post", "put", "delete", "patch", "options", "head"]
+    """HTTP method"""
+    
+    description: Optional[str] = None
+    """Detailed description of the endpoint"""
+    
+    parameters: Optional[List[Parameter]] = None
+    """List of endpoint parameters"""
+    
+    requestBody: Optional[RequestBody] = None
+    """Request body schema if applicable"""
+    
+    responses: Optional[Dict[str, Response]] = None
+    """Expected responses"""
+    
+    security: Optional[List[SecurityRequirement]] = None
+    """Security requirements for the endpoint"""
+```
+
+### Parameter Types
+
+Parameters can be of various types and locations:
+
+```python
+class ParameterIn(str, Enum):
+    QUERY = "query"      # URL query parameters
+    HEADER = "header"    # HTTP headers
+    PATH = "path"        # URL path parameters
+    COOKIE = "cookie"    # Cookie parameters
+    BODY = "body"        # Request body
+
+class Parameter(BaseModel):
+    description: Optional[str] = None
+    in_: ParameterIn
+    name: str
+    schema_: Union[ParameterSchema, List[ParameterSchema]]
+    required: Optional[bool] = None
+```
+
+### Security Schemes
+
+APIs can use different authentication methods:
+
+```python
+class SecuritySchemeType(str, Enum):
+    API_KEY = "apiKey"           # API Key authentication
+    HTTP = "http"                # HTTP authentication (Basic, Bearer)
+    OAUTH2 = "oauth2"            # OAuth2 authentication
+    OPENID_CONNECT = "openIdConnect"  # OpenID Connect
+
+class SecuritySchemeUnion(BaseModel):
+    type: SecuritySchemeType
+    description: Optional[str] = None
+    # Additional fields based on type...
+```
+
+## Example: Complete API Schema
+
+Here's an example of a complete API schema for a simple service:
+
+```python
+api_schema = APISchema(
+    id="example_api",
+    name="Example API",
+    description="A sample API service",
+    base_url="https://api.example.com/v1",
+    endpoints=[
+        EndpointSchema(
+            endpoint_id="create_item",
+            path="/items",
+            method="post",
+            description="Create a new item",
+            parameters=[
+                Parameter(
+                    name="name",
+                    in_="body",
+                    description="Name of the item",
+                    schema_=PrimitiveParameterSchema(
+                        type="string",
+                        required=True
+                    )
+                )
+            ],
+            responses={
+                "200": Response(
+                    status_code="200",
+                    description="Item created successfully"
+                )
+            }
+        )
+    ],
+    securitySchemes={
+        "api_key": ApiKeySecurityScheme(
+            type="apiKey",
+            name="X-API-Key",
+            in_="header"
+        )
+    }
+)
+```
+
+## Next Steps
+
+- Learn about [Authentication](/authentication/overview) types
+- Explore [Response Handling](/core/processed-response)
+- Check out [Tool Formats](/tools/overview) 

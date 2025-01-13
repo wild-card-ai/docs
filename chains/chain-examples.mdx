@@ -1,0 +1,263 @@
+---
+title: 'Chain Examples'
+description: 'Practical examples of using Wildcard Chains'
+---
+
+This guide provides practical examples of common chain patterns using Wildcard.
+
+## Email Processing Chain
+
+This chain demonstrates processing emails with Gmail, including reading messages, creating drafts, and sending responses:
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import APIService, Action
+
+# Chain configuration
+config = ChainConfig(
+    system_prompt="You are an email assistant that helps process and respond to emails.",
+    nodes=[
+        ChainNode(
+            id="list_emails",
+            name="List Recent Emails",
+            prompt="List emails from the last 24 hours about project updates",
+            toolIndex="gmail",
+            selectedService="gmail",
+            selectedAction=Action.Gmail.MESSAGES_LIST,
+            fixedArgs={
+                "q": "subject:project update after:2024/01/01",
+                "maxResults": 5
+            }
+        ),
+        ChainNode(
+            id="analyze_emails",
+            name="Analyze Emails",
+            prompt="Analyze these emails and create a summary of key project updates",
+            isLLMOnly=True
+        ),
+        ChainNode(
+            id="create_draft",
+            name="Create Summary Draft",
+            prompt="Create a draft email summarizing the project updates",
+            toolIndex="gmail",
+            selectedService="gmail",
+            selectedAction=Action.Gmail.DRAFTS_CREATE,
+            fixedArgs={
+                "to": "team@example.com",
+                "subject": "Project Updates Summary"
+            }
+        )
+    ]
+)
+```
+
+## Data Pipeline Chain
+
+This chain shows how to process data between Airtable and Gmail:
+
+```python
+config = ChainConfig(
+    system_prompt="You are a data processing assistant.",
+    nodes=[
+        ChainNode(
+            id="fetch_data",
+            name="Fetch Airtable Records",
+            prompt="Get all records from the Projects table",
+            toolIndex="airtable",
+            selectedService="airtable",
+            selectedAction=Action.Airtable.LIST_RECORDS,
+            fixedArgs={
+                "base_id": "your_base_id",
+                "table_name": "Projects"
+            }
+        ),
+        ChainNode(
+            id="process_data",
+            name="Process Data",
+            prompt="Analyze the project data and create a status report",
+            isLLMOnly=True
+        ),
+        ChainNode(
+            id="send_report",
+            name="Send Report",
+            prompt="Send the status report via email",
+            toolIndex="gmail",
+            selectedService="gmail",
+            selectedAction=Action.Gmail.MESSAGES_SEND,
+            fixedArgs={
+                "to": "manager@example.com",
+                "subject": "Weekly Project Status Report"
+            }
+        )
+    ]
+)
+```
+
+## Multi-Service Chain
+
+This example shows how to chain operations across multiple services for social media scheduling:
+
+```python
+config = ChainConfig(
+    system_prompt="You are a social media coordination assistant.",
+    nodes=[
+        # Calendar: Get Upcoming Events
+        ChainNode(
+            id="get_events",
+            name="Get Calendar Events",
+            prompt="Get upcoming product launch events for the next 7 days",
+            toolIndex="google_calendar",
+            selectedService="google_calendar",
+            selectedAction=Action.GoogleCalendar.EVENTS_LIST,
+            fixedArgs={
+                "q": "product launch",
+                "timeMin": "{{now}}",
+                "timeMax": "{{now_plus_7_days}}"
+            }
+        ),
+        # Twitter: Create Announcement
+        ChainNode(
+            id="post_tweet",
+            name="Post Tweet",
+            prompt="Create a tweet announcing the product launch event",
+            toolIndex="twitter",
+            selectedService="twitter",
+            selectedAction=Action.Twitter.TWEETS_CREATE,
+            fixedArgs={
+                "text": "🚀 Join us for our upcoming product launch! #ProductLaunch"
+            }
+        ),
+        # Slack: Notify Marketing Team
+        ChainNode(
+            id="notify_slack",
+            name="Send Slack Message",
+            prompt="Notify the marketing team about the posted social media announcement",
+            toolIndex="slack",
+            selectedService="slack",
+            selectedAction=Action.Slack.CHAT_POST_MESSAGE,
+            fixedArgs={
+                "channel": "#marketing-team",
+                "text": "📣 Social media announcement posted!"
+            }
+        )
+    ]
+)
+```
+
+## Running the Chains
+
+Here's how to execute these chains using the FastAPI endpoints:
+
+```python
+import httpx
+
+async def run_chain_example():
+    async with httpx.AsyncClient() as client:
+        # Execute the chain
+        response = await client.post(
+            "http://localhost:8000/chains/user123/execute",
+            json={
+                "config": config.dict()
+            }
+        )
+        
+        result = response.json()
+        
+        # Check chain execution status
+        if result["status"] == "success":
+            print("Chain executed successfully!")
+            for node_result in result["node_results"]:
+                print(f"Node {node_result['node_id']}: {node_result['status']}")
+                if node_result["result"]:
+                    print(f"Result: {node_result['result']}")
+        else:
+            print(f"Chain execution failed: {result['error']}")
+```
+
+## Error Handling Examples
+
+Here's how to handle common chain execution errors:
+
+```python
+try:
+    result = await execute_chain(config, user_id)
+    
+    if result.status == "partial":
+        # Some nodes failed
+        failed_nodes = [
+            node for node in result.node_results 
+            if node.status == "error"
+        ]
+        print(f"Chain partially failed. Failed nodes: {len(failed_nodes)}")
+        
+        for node in failed_nodes:
+            if "404" in node.error:
+                print(f"Resource not found in node {node.node_id}")
+            elif "unauthorized" in node.error.lower():
+                print(f"Authentication failed in node {node.node_id}")
+            else:
+                print(f"Unknown error in node {node.node_id}: {node.error}")
+                
+except Exception as e:
+    print(f"Chain execution failed: {str(e)}")
+```
+
+## Chain Management
+
+Example of managing chain executions:
+
+```python
+# List user's chains
+async def list_user_chains(user_id: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/chains/{user_id}/list"
+        )
+        chains = response.json()["chains"]
+        
+        for chain in chains:
+            print(f"Chain {chain['chain_id']}")
+            print(f"Status: {chain['status']}")
+            print(f"Created: {chain['created_at']}")
+            print("---")
+
+# Get specific chain details
+async def get_chain_details(user_id: str, chain_id: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/chains/{user_id}/{chain_id}"
+        )
+        chain = response.json()
+        
+        print(f"Chain ID: {chain['chain_id']}")
+        print(f"System Prompt: {chain['system_prompt']}")
+        print("\nNodes:")
+        for node in chain['nodes']:
+            print(f"- {node['name']}: {node['status']}")
+```
+
+## Best Practices
+
+1. **Chain Design**
+   - Start with simple chains and gradually add complexity
+   - Use LLM-only nodes for decision making between tool calls
+   - Include error handling nodes for critical operations
+   - Keep system prompts focused and specific
+
+2. **Testing**
+   - Test chains with minimal fixed arguments first
+   - Validate node outputs before passing to next node
+   - Include timeout handling for long-running chains
+   - Test error scenarios and recovery paths
+
+3. **Monitoring**
+   - Log chain execution details for debugging
+   - Track success rates of different node types
+   - Monitor execution times and optimize as needed
+   - Set up alerts for chain failures
+
+## Next Steps
+
+- Learn about [Chain Architecture](/openai/chain-architecture)
+- Explore [Response Handling](/core/processed-response)
+- Check out [Available APIs](/tools/overview) 
