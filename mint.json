@@ -96,8 +96,7 @@
       "pages": [
         "authentication/overview",
         "authentication/oauth-setup",
-        "authentication/handling-expired-credentials",
-        "authentication/resuming-executions"
+        "authentication/handling-expired-credentials"
       ]
     },
     {

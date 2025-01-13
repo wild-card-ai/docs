@@ -3,158 +3,65 @@ title: 'Airtable'
 description: 'Interact with Airtable bases, tables, and records'
 ---
 
-## Overview
-
-The Airtable integration allows you to interact with Airtable bases, tables, and records. You can perform operations like listing bases, managing tables, and manipulating records.
+Airtable integration in Wildcard provides comprehensive management of bases, tables, records, and comments, allowing you to create, read, update, and delete data across your Airtable workspace.
 
 ## Authentication
 
-Airtable requires an API key for authentication. Register your API key with the WildcardClient:
+Airtable requires OAuth2 with PKCE authentication. Here are all available scopes:
 
-```python
-from wildcard_openai import WildcardClient
-from wildcard_core.models import APIService
+| Scope | Description | Access Level |
+|-------|-------------|--------------|
+| `data.records:read` | See the data in records | Read only |
+| `data.records:write` | Create, edit, and delete records | Read/Write |
+| `data.recordComments:read` | See comments in records | Read only |
+| `data.recordComments:write` | Create, edit, and delete record comments | Read/Write |
+| `schema.bases:read` | See the structure of a base, like table names or field types | Read only |
+| `schema.bases:write` | Edit the structure of a base, like adding new fields or tables | Read/Write |
 
-client = WildcardClient(api_key="your_wildcard_api_key")
-client.register_api_auth(
-    api_service=APIService.AIRTABLE,
-    auth_config={"api_key": "your_airtable_api_key"}
-)
-```
+Follow these steps to set up authentication:
+
+1. Follow our [OAuth2 setup guide](/authentication/oauth2) to configure Airtable authentication
+2. Register the OAuth2 credentials with your client
 
 ## Available Actions
 
-| Action | Description | Required Arguments | Optional Arguments |
-|--------|-------------|-------------------|-------------------|
-| `LIST_BASES` | List all accessible bases | None | None |
-| `LIST_TABLES` | List tables in a base | `base_id` | None |
-| `LIST_RECORDS` | List records in a table | `base_id`, `table_name` | `view`, `fields`, `max_records`, `page_size` |
-| `GET_RECORD` | Get a specific record | `base_id`, `table_name`, `record_id` | None |
-| `CREATE_RECORD` | Create a new record | `base_id`, `table_name`, `fields` | None |
-| `UPDATE_RECORD` | Update an existing record | `base_id`, `table_name`, `record_id`, `fields` | None |
-| `DELETE_RECORD` | Delete a record | `base_id`, `table_name`, `record_id` | None |
+Here's a complete list of all available Airtable actions:
 
-## Example Usage
-
-### List Records from a Table
-
-```python
-from wildcard_openai import WildcardClient
-from wildcard_core.models import Action
-
-async def list_records():
-    client = WildcardClient(api_key="your_wildcard_api_key")
-    client.register_api_auth(
-        api_service=APIService.AIRTABLE,
-        auth_config={"api_key": "your_airtable_api_key"}
-    )
-    
-    response = await client.run_tool_with_args(
-        tool_name=Action.Airtable.LIST_RECORDS,
-        base_id="your_base_id",
-        table_name="your_table_name",
-        max_records=100
-    )
-    
-    return response.processed_response.data
-```
-
-### Create and Update Records
-
-```python
-async def manage_records():
-    client = WildcardClient(api_key="your_wildcard_api_key")
-    client.register_api_auth(
-        api_service=APIService.AIRTABLE,
-        auth_config={"api_key": "your_airtable_api_key"}
-    )
-    
-    # Create a record
-    create_response = await client.run_tool_with_args(
-        tool_name=Action.Airtable.CREATE_RECORD,
-        base_id="your_base_id",
-        table_name="your_table_name",
-        fields={
-            "Name": "New Project",
-            "Status": "In Progress",
-            "Due Date": "2024-03-01"
-        }
-    )
-    
-    record_id = create_response.processed_response.data["id"]
-    
-    # Update the record
-    update_response = await client.run_tool_with_args(
-        tool_name=Action.Airtable.UPDATE_RECORD,
-        base_id="your_base_id",
-        table_name="your_table_name",
-        record_id=record_id,
-        fields={
-            "Status": "Completed"
-        }
-    )
-    
-    return update_response.processed_response.data
-```
-
-## Error Handling
-
-Common errors you might encounter:
-
-1. **Authentication Errors**
-   - Invalid API key
-   - Expired API key
-   - Missing required permissions
-
-2. **Resource Errors**
-   - Base not found
-   - Table not found
-   - Record not found
-   - Invalid field names
-
-3. **Rate Limiting**
-   - Too many requests
-   - Exceeded API quota
-
-Handle errors appropriately:
-
-```python
-from wildcard_core.exceptions import AuthenticationError, ResourceNotFoundError
-
-async def handle_airtable_errors():
-    try:
-        response = await client.run_tool_with_args(
-            tool_name=Action.Airtable.LIST_RECORDS,
-            base_id="your_base_id",
-            table_name="your_table_name"
-        )
-    except AuthenticationError as e:
-        print(f"Authentication failed: {e}")
-    except ResourceNotFoundError as e:
-        print(f"Resource not found: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-```
-
-## Best Practices
-
-1. **Performance**
-   - Use field selection to limit data retrieval
-   - Implement pagination for large datasets
-   - Cache frequently accessed data
-
-2. **Security**
-   - Store API keys securely
-   - Use minimal required permissions
-   - Validate user input
-
-3. **Error Handling**
-   - Implement proper error recovery
-   - Log errors for debugging
-   - Provide meaningful error messages
+| Category | Action | Description |
+|----------|--------|-------------|
+| **Records** | `RECORDS_LIST` | List records in a table |
+| | `RECORDS_GET` | Get a specific record |
+| | `RECORDS_CREATE` | Create a new record |
+| | `RECORDS_UPDATE` | Update a specific record |
+| | `RECORDS_DELETE` | Delete a specific record |
+| | `RECORDS_UPDATE_MULTIPLE` | Update multiple records |
+| | `RECORDS_REPLACE_MULTIPLE` | Replace multiple records |
+| | `RECORDS_DELETE_MULTIPLE` | Delete multiple records |
+| | `RECORDS_SYNC_CSV` | Sync data from CSV file |
+| | `RECORDS_UPLOAD_ATTACHMENT` | Upload an attachment |
+| **Comments** | `COMMENTS_LIST` | List comments on a record |
+| | `COMMENTS_CREATE` | Create a new comment |
+| | `COMMENTS_UPDATE` | Update a comment |
+| | `COMMENTS_DELETE` | Delete a comment |
+| **Fields** | `FIELDS_CREATE` | Create a new field |
+| | `FIELDS_UPDATE` | Update a field |
+| **Tables** | `TABLES_CREATE` | Create a new table |
+| | `TABLES_UPDATE` | Update a table |
+| **Bases** | `BASES_LIST` | List all accessible bases |
+| | `BASES_SCHEMA` | Get base schema |
+| | `BASES_CREATE` | Create a new base |
+| **Views** | `VIEWS_LIST` | List views in a table |
+| | `VIEWS_GET_METADATA` | Get view metadata |
+| | `VIEWS_DELETE` | Delete a view |
+| **Webhooks** | `WEBHOOKS_LIST` | List webhooks |
+| | `WEBHOOKS_CREATE` | Create webhook |
+| | `WEBHOOKS_DELETE` | Delete webhook |
+| | `WEBHOOKS_REFRESH` | Refresh webhook |
+| | `WEBHOOKS_ENABLE_NOTIFICATIONS` | Enable webhook notifications |
+| | `WEBHOOKS_LIST_PAYLOADS` | List webhook payloads |
 
 ## Next Steps
 
 - Learn about [OAuth Setup](/authentication/oauth-setup)
-- Explore [Chain Examples](/chains/chain-examples)
-- Check out [Available Actions](/tools/action-class) 
+- Explore [Available Actions](/tools/action-class)
+- Check out [Response Handling](/core/processed-response) 

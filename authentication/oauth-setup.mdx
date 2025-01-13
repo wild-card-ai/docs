@@ -89,17 +89,31 @@ code_verifier = oauth._code_verifier
 
 ### 3. Redirect User to Authorization URL
 
-Pass the generated auth url to your frontend application and redirect the user to it.
+Pass the generated auth url to your frontend application and redirect the user to it. Here's an example of how you can do this in a frontend React application.
 
 ```typescript
-const auth_url = await fetch("/auth/url").then(res => res.json())
-window.location.href = auth_url;
+const auth_url = await fetch("https://your-app.com/auth/get_auth_url")
+window.location.href = auth_url
 ```
 
 ### 4. Handle OAuth Callback
 
-Set up an endpoint to handle the OAuth callback. This endpoint will be called by the service after the user has authorized the app.
-Store the returned credentials info in your database with the user.
+Set up an endpoint to handle the OAuth callback. This endpoint will be called by the service after the user has authorized the app. Store the returned credentials info in your database with the user info.
+
+```python
+@app.route("/auth/callback", methods=["GET"])
+async def handle_oauth_callback(request: Request):
+    # Handle the OAuth callback
+
+    # Get the OAuth completion data from the request
+    completion_data = await get_oauth_completion_data(request)
+
+    # Store the completion data in your database
+    await store_oauth_completion_data(completion_data)
+
+    # Redirect the user to your app's home page
+    return RedirectResponse(url="/")
+```
 
 ### 5. Add OAuth Info to WildcardClient before running an Action
 
@@ -129,168 +143,6 @@ else:
 api_service = tool_name.get_api_service()
 wildcard_client.register_api_auth(api_service, auth_config)
 ```
-
-### 6. Resume Operations
-
-After OAuth completion, resume any pending operations:
-
-```python
-from wildcard_openai import WildcardClient
-from wildcard_core.models import APIService
-from wildcard_core.auth.auth_types import OAuth2Flows
-
-async def start_oauth():
-    client = WildcardClient(
-        api_key="your_wildcard_api_key",
-        webhook_url="https://your-app.com/oauth/callback"
-    )
-    
-    # Start OAuth flow for Gmail
-    auth_url = await client.initiate_oauth(
-        flows=[OAuth2Flows.AUTHORIZATION_CODE],
-        api_service=APIService.GMAIL,
-        required_scopes={
-            'https://www.googleapis.com/auth/gmail.send',
-            'https://www.googleapis.com/auth/gmail.readonly'
-        }
-    )
-    
-    # Redirect user to auth_url for consent
-    return auth_url
-```
-
-### 2. Handle OAuth Callback
-
-Set up an endpoint to handle the OAuth callback:
-
-```python
-from wildcard_core.events.types import OAuthCompletionData
-
-async def handle_oauth_callback(completion_data: OAuthCompletionData):
-    # OAuth completion data includes:
-    # - api_service: The API service (e.g., "gmail")
-    # - auth_config: OAuth configuration including tokens
-    # - state: State parameter from OAuth flow
-    
-    # Store the completion data for the user
-    await store_oauth_data(completion_data)
-    
-    # Resume any pending operations
-    await resume_pending_operations(completion_data)
-```
-
-### 3. Resume Operations
-
-After OAuth completion, resume any pending operations:
-
-```python
-from wildcard_core.events.types import ResumeToolExecutionInfo
-
-async def resume_pending_operations(completion_data: OAuthCompletionData):
-    client = WildcardClient(api_key="your_wildcard_api_key")
-    
-    # Get pending operations for this OAuth completion
-    pending_ops = await get_pending_operations(completion_data.state)
-    
-    for op in pending_ops:
-        # Resume each pending operation
-        await client.resume_tool_execution(
-            ResumeToolExecutionInfo(
-                tool_name=op.tool_name,
-                args=op.args,
-                auth_config=completion_data.auth_config
-            )
-        )
-```
-
-## Service-Specific Setup
-
-### Google APIs (Gmail, Calendar)
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
-2. Enable the APIs you need
-3. Configure OAuth consent screen
-4. Create OAuth 2.0 Client ID credentials
-5. Add your callback URL to authorized redirect URIs
-
-```python
-# Configure Google OAuth
-client.register_api_auth(
-    APIService.GMAIL,
-    {
-        "client_id": "your_google_client_id",
-        "client_secret": "your_google_client_secret",
-        "scopes": [
-            "https://www.googleapis.com/auth/gmail.send",
-            "https://www.googleapis.com/auth/gmail.readonly"
-        ]
-    }
-)
-```
-
-### Slack
-
-1. Create an app in [Slack API Console](https://api.slack.com/apps)
-2. Add OAuth scopes your app needs
-3. Add your callback URL to redirect URLs
-
-```python
-# Configure Slack OAuth
-client.register_api_auth(
-    APIService.SLACK,
-    {
-        "client_id": "your_slack_client_id",
-        "client_secret": "your_slack_client_secret",
-        "scopes": ["chat:write", "channels:read"]
-    }
-)
-```
-
-## Error Handling
-
-Handle common OAuth errors:
-
-```python
-from wildcard_core.auth.oauth_helper import OAuthCredentialsRequiredException
-
-async def handle_oauth_errors():
-    try:
-        response = await client.run_tool_with_args(
-            tool_name=Action.Gmail.MESSAGES_SEND,
-            to="recipient@example.com",
-            subject="Test"
-        )
-    except OAuthCredentialsRequiredException as e:
-        # Get OAuth URL and required scopes
-        auth_url = await client.initiate_oauth(
-            flows=[OAuth2Flows.AUTHORIZATION_CODE],
-            api_service=e.api_service,
-            required_scopes=e.required_scopes
-        )
-        # Redirect user to auth_url
-```
-
-## Best Practices
-
-1. **Security**
-   - Store client secrets securely
-   - Use environment variables
-   - Implement PKCE for mobile/native apps
-
-2. **Token Management**
-   - Store refresh tokens securely
-   - Implement proper token refresh handling
-   - Clear tokens on user logout
-
-3. **Error Handling**
-   - Handle expired tokens gracefully
-   - Implement retry logic
-   - Log authentication failures
-
-4. **User Experience**
-   - Clear consent screen messaging
-   - Smooth error recovery
-   - Proper scope explanations
 
 ## Next Steps
 
