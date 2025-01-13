@@ -5,6 +5,10 @@ description: 'Core client class for interacting with the Wildcard API'
 
 The `WildcardBaseClient` is the foundation of Wildcard's functionality. It provides core methods for API authentication, tool management, and execution.
 
+<Note>
+For most use cases, you should use one of our framework-specific clients instead (e.g. [OpenAI](/openai/overview)). The base client is primarily intended as a foundation for building higher-level abstractions.
+</Note>
+
 ## When to Use WildcardBaseClient
 
 You'll want to use `WildcardBaseClient` when:
@@ -12,8 +16,6 @@ You'll want to use `WildcardBaseClient` when:
 - Implementing your own framework-specific client
 - Requiring fine-grained control over authentication and tool execution
 - Developing advanced workflows that need low-level API access
-
-For most standard use cases, you should use one of our framework-specific clients instead (e.g. [OpenAI](/openai/overview)). The base client is primarily intended as a foundation for building higher-level abstractions.
 
 ## Key Properties
 
