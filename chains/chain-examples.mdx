@@ -95,51 +95,49 @@ config = ChainConfig(
 
 ## Multi-Service Chain
 
-This example shows how to chain operations across multiple services:
+This example shows how to chain operations across multiple services for social media scheduling:
 
 ```python
 config = ChainConfig(
-    system_prompt="You are a project management assistant.",
+    system_prompt="You are a social media coordination assistant.",
     nodes=[
-        # GitHub: Create Issue
+        # Calendar: Get Upcoming Events
         ChainNode(
-            id="create_issue",
-            name="Create GitHub Issue",
-            prompt="Create a bug report issue",
-            toolIndex="github",
-            selectedService="github",
-            selectedAction=Action.GitHub.ISSUES_CREATE,
+            id="get_events",
+            name="Get Calendar Events",
+            prompt="Get upcoming product launch events for the next 7 days",
+            toolIndex="google_calendar",
+            selectedService="google_calendar",
+            selectedAction=Action.GoogleCalendar.EVENTS_LIST,
             fixedArgs={
-                "owner": "your-org",
-                "repo": "your-repo",
-                "title": "Bug Report",
-                "labels": ["bug"]
+                "q": "product launch",
+                "timeMin": "{{now}}",
+                "timeMax": "{{now_plus_7_days}}"
             }
         ),
-        # Slack: Notify Team
+        # Twitter: Create Announcement
+        ChainNode(
+            id="post_tweet",
+            name="Post Tweet",
+            prompt="Create a tweet announcing the product launch event",
+            toolIndex="twitter",
+            selectedService="twitter",
+            selectedAction=Action.Twitter.TWEETS_CREATE,
+            fixedArgs={
+                "text": "🚀 Join us for our upcoming product launch! #ProductLaunch"
+            }
+        ),
+        # Slack: Notify Marketing Team
         ChainNode(
             id="notify_slack",
             name="Send Slack Message",
-            prompt="Notify the team about the new issue",
+            prompt="Notify the marketing team about the posted social media announcement",
             toolIndex="slack",
             selectedService="slack",
             selectedAction=Action.Slack.CHAT_POST_MESSAGE,
             fixedArgs={
-                "channel": "project-bugs",
-                "text": "New bug report created"
-            }
-        ),
-        # Calendar: Schedule Meeting
-        ChainNode(
-            id="schedule_meeting",
-            name="Schedule Meeting",
-            prompt="Schedule a bug review meeting",
-            toolIndex="google_calendar",
-            selectedService="google_calendar",
-            selectedAction=Action.GoogleCalendar.EVENTS_INSERT,
-            fixedArgs={
-                "summary": "Bug Review Meeting",
-                "duration": "30m"
+                "channel": "#marketing-team",
+                "text": "📣 Social media announcement posted!"
             }
         )
     ]
@@ -260,6 +258,6 @@ async def get_chain_details(user_id: str, chain_id: str):
 
 ## Next Steps
 
-- Learn about [Chain Architecture](/chains/overview)
+- Learn about [Chain Architecture](/openai/chain-architecture)
 - Explore [Response Handling](/core/processed-response)
 - Check out [Available APIs](/tools/overview) 
