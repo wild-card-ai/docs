@@ -1,29 +1,25 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Wildcard Documentation",
-  "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
-  },
-  "favicon": "/favicon.svg",
+  "name": "Wildcard",
+  "favicon": "/logo/asterisk.png",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
+    "primary": "#3366cc",
+    "light": "#6699ff",
+    "dark": "#003399",
     "anchors": {
-      "from": "#0D9373",
-      "to": "#07C983"
+      "from": "#003399",
+      "to": "#6699ff"
     }
   },
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:hi@mintlify.com"
+      "url": "mailto:info@wild-card.ai"
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "name": "View Demo",
+    "url": "https://wild-card.ai/demo"
   },
   "tabs": [
     {
@@ -33,19 +29,9 @@
   ],
   "anchors": [
     {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
-    },
-    {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "name": "Wildcard",
+      "icon": "asterisk",
+      "url": "https://wild-card.ai"
     }
   ],
   "navigation": [
@@ -60,7 +46,7 @@
     {
       "group": "Tools",
       "pages": [
-        "tools/overview",
+        "tools/tools-directory",
         "tools/using-tools",
         "tools/action-class",
         {
@@ -68,27 +54,25 @@
           "pages": [
             "tools/apis/gmail",
             "tools/apis/airtable",
+            "tools/apis/brave",
             "tools/apis/slack",
-            "tools/apis/github",
             "tools/apis/google-calendar",
-            "tools/apis/spotify",
             "tools/apis/youtube",
             "tools/apis/notion",
-            "tools/apis/discord",
             "tools/apis/twilio",
-            "tools/apis/new-york-times",
-            "tools/apis/brave-search"
+            "tools/apis/nyt",
+            "tools/apis/x",
+            "tools/apis/shopify",
+            "tools/apis/salesforce"
           ]
         }
       ]
     },
     {
-      "group": "Structures",
+      "group": "OpenAI Tool Calling",
       "pages": [
-        "core/wildcard-base-client",
-        "core/custom-logging",
-        "core/processed-response",
-        "core/api-schema"
+        "openai/overview",
+        "openai/wildcard-client"
       ]
     },
     {
@@ -100,10 +84,12 @@
       ]
     },
     {
-      "group": "OpenAI Tool Calling",
+      "group": "Structures",
       "pages": [
-        "openai/overview",
-        "openai/wildcard-client"
+        "core/wildcard-base-client",
+        "core/custom-logging",
+        "core/processed-response",
+        "core/api-schema"
       ]
     },
     {
@@ -117,8 +103,7 @@
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/mintlify",
-    "github": "https://github.com/mintlify",
-    "linkedin": "https://linkedin.com/company/mintlify"
+    "x": "https://x.com/wildcard_ai",
+    "linkedin": "https://www.linkedin.com/company/wild-card-ai"
   }
 }

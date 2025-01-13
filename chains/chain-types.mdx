@@ -1,9 +1,9 @@
 ---
 title: 'Chain Types'
-description: 'Different types of chains supported in Wildcard'
+description: 'Different types of chains with Wildcard'
 ---
 
-Wildcard supports several types of chains to handle different workflow patterns. Each type is optimized for specific use cases.
+Wildcard extends to different types of chains to handle various workflow patterns. Each type is optimized for specific use cases.
 
 ## Sequential Chains
 
@@ -71,29 +71,39 @@ async def smart_email_workflow():
 Chains that coordinate operations across multiple API services:
 
 ```python
-async def project_workflow():
+async def social_media_scheduler():
     client = WildcardClient(api_key="your_api_key")
     
-    # Step 1: Create GitHub issue
-    issue = await client.run_tool_with_args(
-        tool_name=Action.GitHub.ISSUES_CREATE,
-        title="New Feature Request",
-        body="Implementation needed"
+    # Step 1: Get upcoming events from calendar
+    events = await client.run_tool_with_args(
+        tool_name=Action.GoogleCalendar.EVENTS_LIST,
+        time_min=datetime.now().isoformat(),
+        time_max=(datetime.now() + timedelta(days=7)).isoformat(),
+        q="product launch"
     )
     
-    # Step 2: Send Slack notification
-    await client.run_tool_with_args(
-        tool_name=Action.Slack.CHAT_POST_MESSAGE,
-        channel="dev-team",
-        text=f"New issue created: {issue.processed_response.data['html_url']}"
-    )
-    
-    # Step 3: Schedule follow-up
-    await client.run_tool_with_args(
-        tool_name=Action.GoogleCalendar.EVENTS_INSERT,
-        summary="Review New Feature Request",
-        description=f"Discuss issue: {issue.processed_response.data['html_url']}"
-    )
+    for event in events.processed_response.data['items']:
+        event_time = datetime.fromisoformat(event['start']['dateTime'])
+        
+        # Step 2: Create social media announcement
+        tweet_text = f"🚀 Join us {event_time.strftime('%B %d at %I:%M %p')} " \
+                    f"for the launch of {event['summary']}! #ProductLaunch"
+        
+        # Post to Twitter/X
+        tweet = await client.run_tool_with_args(
+            tool_name=Action.Twitter.TWEETS_CREATE,
+            text=tweet_text
+        )
+        
+        # Step 3: Share in Slack
+        await client.run_tool_with_args(
+            tool_name=Action.Slack.CHAT_POST_MESSAGE,
+            channel="#marketing-team",
+            text=f"📣 Social media announcement posted!\n" \
+                 f"Event: {event['summary']}\n" \
+                 f"Tweet: {tweet.processed_response.data['url']}\n" \
+                 f"Time: {event_time.strftime('%B %d at %I:%M %p')}"
+        )
 ```
 
 ## State-Managed Chains
