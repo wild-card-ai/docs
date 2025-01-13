@@ -1,0 +1,84 @@
+---
+title: 'Action Class'
+description: 'Understanding the Action Class and tool identifiers'
+---
+
+The `Action` class provides a type-safe way to reference API endpoints in Wildcard. It organizes tools by API service and provides enum-based access to all available endpoints.
+
+## Structure
+
+Each API service has its own enum within the Action class:
+
+```python
+from wildcard_core.models.Action import Action
+
+# Gmail endpoints
+Action.Gmail.MESSAGES_SEND
+Action.Gmail.MESSAGES_LIST
+
+# Airtable endpoints
+Action.Airtable.LIST_RECORDS
+Action.Airtable.CREATE_RECORD
+
+# Slack endpoints
+Action.Slack.CHAT_POST_MESSAGE
+Action.Slack.CHANNELS_LIST
+```
+
+## Using Action Identifiers
+
+There are multiple ways to reference an action:
+
+```python
+# Using enum
+action = Action.Airtable.LIST_RECORDS
+
+# From string identifier
+action = Action.from_string("airtable_list_records")
+
+# From enum name
+action = Action.from_enum_name("Airtable.LIST_RECORDS")
+
+# Get all actions for an API service
+actions = Action.from_api_service(APIService.AIRTABLE)
+```
+
+## With WildcardClient
+
+Use Action identifiers when adding tools to your client:
+
+```python
+from wildcard_openai import WildcardClient
+
+client = WildcardClient(...)
+
+# Add specific tool
+client.add_tool(Action.Airtable.LIST_RECORDS)
+
+# Run tool
+response = await client.run_tool_with_args(
+    tool_name=Action.Airtable.LIST_RECORDS,
+    base_id="appXXXXXXXXXXXXXX",
+    table_name="Projects"
+)
+```
+
+## Best Practices
+
+1. **Type Safety**
+   - Use enum references instead of strings when possible
+   - Let your IDE help with autocomplete and validation
+
+2. **API Organization**
+   - Group related tools by their API service
+   - Use `add_tool_by_api` when you need multiple tools from the same service
+
+3. **Error Prevention**
+   - Use `from_string` when working with dynamic action names
+   - Validate action existence before using
+
+## Next Steps
+
+- Learn about [Using Tools](/tools/using-tools)
+- Explore [Available APIs](/tools/overview)
+- Check out [Authentication](/authentication/overview) 

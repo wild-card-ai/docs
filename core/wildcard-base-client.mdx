@@ -1,0 +1,88 @@
+---
+title: 'Wildcard Base Client'
+description: 'Core client class for interacting with the Wildcard API'
+---
+
+The `WildcardBaseClient` is the foundation of Wildcard's functionality. It provides core methods for API authentication, tool management, and execution.
+
+## When to Use WildcardBaseClient
+
+You'll want to use `WildcardBaseClient` when:
+- Building a custom integration with Wildcard that needs direct API access
+- Implementing your own framework-specific client
+- Requiring fine-grained control over authentication and tool execution
+- Developing advanced workflows that need low-level API access
+
+For most standard use cases, you should use one of our framework-specific clients instead (e.g. [OpenAI](/openai/overview)). The base client is primarily intended as a foundation for building higher-level abstractions.
+
+## Key Properties
+
+- `api_key`: Your Wildcard API key for authentication with our service
+- `auth_configs`: Dictionary mapping APIService to AuthConfig for managing multiple API authentications
+- `webhook_url`: URL for handling OAuth callbacks when integrating with OAuth-based services
+- `index_name`: Name of the API index being used for endpoint discovery
+- `logger`: Logger implementation for tracking operations and debugging
+
+## Core Methods
+
+### Authentication Management
+
+The client provides methods for managing API authentication. You can associate credentials with a specific API service.
+
+```python
+async def register_api_auth(
+    self,
+    api_id: APIService,
+    auth_config: AuthConfig
+) -> None:
+    """Register authentication configuration for an API."""
+```
+
+### Tool Management
+
+These methods help you discover and understand available API endpoints:
+
+```python
+async def get_action_schema(
+    self,
+    action_id: str,
+    collection_name: str = None
+) -> APISchema:
+    """Get the schema for a specific action/tool."""
+
+async def search_endpoints(
+    self,
+    req: SearchEndpointsRequest
+) -> Dict[str, Any]:
+    """Search for endpoints matching a query."""
+```
+
+### Tool Execution
+
+The core method for executing API calls with proper error handling and response processing:
+
+```python
+async def run_tool_with_args(
+    self,
+    tool_name: ActionType,
+    schema: Optional[APISchema] = None,
+    **kwargs
+) -> ProcessedResponse:
+    """Execute a tool with the provided arguments."""
+```
+
+## Authentication Status
+
+Before executing tools, you can verify authentication status to ensure proper setup:
+
+```python
+auth_status, schema = await client.get_auth_status("gmail_messages_send")
+if auth_status.auth_required:
+    print(f"Authentication required: {auth_status.message}")
+```
+
+## Next Steps
+
+- Learn about the [Action Class](/core/action-class) for understanding tool definitions
+- Explore [Supported APIs](/core/supported-apis) to see available integrations
+- Implement [Custom Logging](/core/custom-logging) for better debugging and monitoring 

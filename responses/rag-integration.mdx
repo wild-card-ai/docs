@@ -1,0 +1,277 @@
+---
+title: 'RAG Integration'
+description: 'Integrating Wildcard with Retrieval Augmented Generation systems'
+---
+
+Wildcard's document handling capabilities make it ideal for integration with Retrieval Augmented Generation (RAG) systems. This guide explains how to use Wildcard's document responses with various RAG implementations.
+
+## Overview
+
+<Frame>
+  ![RAG Integration Architecture](/images/rag-architecture.png)
+</Frame>
+
+The integration involves three main components:
+1. **Document Collection**: Gathering documents from API responses
+2. **Document Processing**: Converting documents to vector embeddings
+3. **Storage & Retrieval**: Managing document vectors and metadata
+
+## Document Collection
+
+### Processing API Responses
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
+
+async def collect_documents():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Get documents from various sources
+    email_docs = await get_email_attachments(client)
+    drive_docs = await get_drive_documents(client)
+    notion_docs = await get_notion_pages(client)
+    
+    return email_docs + drive_docs + notion_docs
+
+async def get_email_attachments(client):
+    """Get documents from Gmail attachments"""
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_LIST,
+        q="has:attachment"
+    )
+    
+    documents = []
+    for message in response.processed_response.data['messages']:
+        msg_response = await client.run_tool_with_args(
+            tool_name=Action.Gmail.MESSAGES_GET,
+            id=message['id']
+        )
+        if msg_response.processed_response.documents:
+            documents.extend(msg_response.processed_response.documents)
+    
+    return documents
+```
+
+## Document Processing
+
+### Text Extraction
+
+```python
+import PyPDF2
+import docx
+import io
+import base64
+
+class DocumentProcessor:
+    def extract_text(self, doc: dict) -> str:
+        """Extract text content from document"""
+        content = base64.b64decode(doc['content'])
+        
+        if doc['mime_type'] == 'application/pdf':
+            return self._extract_pdf_text(content)
+        elif doc['mime_type'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            return self._extract_docx_text(content)
+        elif doc['mime_type'].startswith('text/'):
+            return content.decode('utf-8')
+        else:
+            raise ValueError(f"Unsupported mime type: {doc['mime_type']}")
+    
+    def _extract_pdf_text(self, content: bytes) -> str:
+        with io.BytesIO(content) as file:
+            reader = PyPDF2.PdfReader(file)
+            return " ".join(page.extract_text() for page in reader.pages)
+    
+    def _extract_docx_text(self, content: bytes) -> str:
+        with io.BytesIO(content) as file:
+            doc = docx.Document(file)
+            return " ".join(paragraph.text for paragraph in doc.paragraphs)
+```
+
+### Creating Embeddings
+
+```python
+from openai import AsyncOpenAI
+import numpy as np
+
+class EmbeddingProcessor:
+    def __init__(self, openai_client: AsyncOpenAI):
+        self.client = openai_client
+    
+    async def create_embedding(self, text: str) -> np.ndarray:
+        """Create embedding vector for text"""
+        response = await self.client.embeddings.create(
+            model="text-embedding-ada-002",
+            input=text
+        )
+        return np.array(response.data[0].embedding)
+    
+    async def process_document(self, doc: dict):
+        """Process document and create embedding"""
+        # Extract text
+        processor = DocumentProcessor()
+        text = processor.extract_text(doc)
+        
+        # Create embedding
+        embedding = await self.create_embedding(text)
+        
+        return {
+            "document": doc,
+            "text": text,
+            "embedding": embedding
+        }
+```
+
+## Storage & Retrieval
+
+### Vector Store Integration
+
+```python
+from typing import List, Dict
+import chromadb
+from chromadb.config import Settings
+
+class VectorStore:
+    def __init__(self, collection_name: str):
+        self.client = chromadb.Client(Settings(
+            chroma_db_impl="duckdb+parquet",
+            persist_directory="./chroma_store"
+        ))
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name
+        )
+    
+    async def add_documents(self, processed_docs: List[Dict]):
+        """Add documents to vector store"""
+        embeddings = [doc["embedding"] for doc in processed_docs]
+        documents = [doc["text"] for doc in processed_docs]
+        metadata = [doc["document"] for doc in processed_docs]
+        ids = [str(i) for i in range(len(processed_docs))]
+        
+        self.collection.add(
+            embeddings=embeddings,
+            documents=documents,
+            metadatas=metadata,
+            ids=ids
+        )
+    
+    async def query(self, query_text: str, n_results: int = 5):
+        """Query vector store for similar documents"""
+        # Create query embedding
+        embedding_processor = EmbeddingProcessor()
+        query_embedding = await embedding_processor.create_embedding(query_text)
+        
+        # Search for similar documents
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=n_results
+        )
+        
+        return results
+```
+
+## Complete RAG Implementation
+
+### RAG System Class
+
+```python
+class RAGSystem:
+    def __init__(
+        self,
+        wildcard_client: WildcardClient,
+        openai_client: AsyncOpenAI,
+        vector_store: VectorStore
+    ):
+        self.wildcard = wildcard_client
+        self.openai = openai_client
+        self.vector_store = vector_store
+        self.embedding_processor = EmbeddingProcessor(openai_client)
+    
+    async def collect_and_process_documents(self):
+        """Collect and process documents from all sources"""
+        # Collect documents
+        documents = await collect_documents()
+        
+        # Process documents
+        processed_docs = []
+        for doc in documents:
+            processed = await self.embedding_processor.process_document(doc)
+            processed_docs.append(processed)
+        
+        # Store documents
+        await self.vector_store.add_documents(processed_docs)
+    
+    async def query_documents(self, query: str, n_results: int = 5):
+        """Query for relevant documents"""
+        return await self.vector_store.query(query, n_results)
+    
+    async def generate_response(self, query: str, context_docs: List[dict]):
+        """Generate response using retrieved documents"""
+        # Format context from documents
+        context = "\n\n".join([doc["text"] for doc in context_docs])
+        
+        # Generate response with OpenAI
+        response = await self.openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Use the following context to answer the question."},
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"}
+            ]
+        )
+        
+        return response.choices[0].message.content
+```
+
+## Usage Example
+
+```python
+async def main():
+    # Initialize clients
+    wildcard_client = WildcardClient(api_key="your_wildcard_api_key")
+    openai_client = AsyncOpenAI(api_key="your_openai_api_key")
+    vector_store = VectorStore("my_documents")
+    
+    # Initialize RAG system
+    rag = RAGSystem(wildcard_client, openai_client, vector_store)
+    
+    # Collect and process documents
+    await rag.collect_and_process_documents()
+    
+    # Query and generate response
+    query = "What are the key points from last week's meeting?"
+    relevant_docs = await rag.query_documents(query)
+    response = await rag.generate_response(query, relevant_docs)
+    
+    print(response)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Best Practices
+
+1. **Document Processing**
+   - Chunk large documents appropriately
+   - Clean and normalize text before embedding
+   - Handle multiple languages properly
+
+2. **Vector Storage**
+   - Implement proper indexing for fast retrieval
+   - Regular maintenance of vector store
+   - Backup important embeddings
+
+3. **Performance**
+   - Batch process documents when possible
+   - Cache frequently used embeddings
+   - Use async operations for I/O-bound tasks
+
+4. **Quality**
+   - Validate document content before processing
+   - Monitor embedding quality
+   - Implement relevance feedback
+
+## Next Steps
+
+- Learn about [Chaining Calls](/responses/chaining-calls)
+- Explore [OpenAI Integration](/openai/overview)
+- Check out [Document Handling](/responses/document-handling) 

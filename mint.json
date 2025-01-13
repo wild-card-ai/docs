@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
+  "name": "Wildcard Documentation",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
@@ -50,36 +50,70 @@
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Getting Started",
       "pages": [
         "introduction",
         "quickstart",
-        "development"
+        "installation"
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Tools",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "tools/overview",
+        "tools/using-tools",
+        "tools/action-class",
+        {
+          "group": "Supported APIs",
+          "pages": [
+            "tools/apis/gmail",
+            "tools/apis/airtable",
+            "tools/apis/slack",
+            "tools/apis/github",
+            "tools/apis/google-calendar",
+            "tools/apis/spotify",
+            "tools/apis/youtube",
+            "tools/apis/notion",
+            "tools/apis/discord",
+            "tools/apis/twilio",
+            "tools/apis/new-york-times",
+            "tools/apis/brave-search"
+          ]
+        }
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "Structures",
       "pages": [
-        "api-reference/introduction"
+        "core/wildcard-base-client",
+        "core/custom-logging",
+        "core/processed-response",
+        "core/api-schema"
       ]
     },
     {
-      "group": "Endpoint Examples",
+      "group": "Authentication",
       "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "authentication/overview",
+        "authentication/oauth-setup",
+        "authentication/handling-expired-credentials",
+        "authentication/resuming-executions"
+      ]
+    },
+    {
+      "group": "OpenAI Tool Calling",
+      "pages": [
+        "openai/overview",
+        "openai/wildcard-client"
+      ]
+    },
+    {
+      "group": "Wildcard Chains",
+      "pages": [
+        "chains/chain-overview",
+        "chains/chain-types",
+        "chains/chain-examples",
+        "chains/chains-fastapi"
       ]
     }
   ],

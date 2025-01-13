@@ -1,0 +1,114 @@
+---
+title: 'Authentication Overview'
+description: 'Learn how to authenticate your API requests with Wildcard'
+---
+
+Wildcard supports multiple authentication methods to securely interact with various APIs. Each API requires specific authentication methods based on their security requirements.
+
+<Note>
+Authentication credentials are never sent to the LLM you're using.
+</Note>
+
+## Supported Authentication Methods
+
+<AccordionGroup>
+  <Accordion title="OAuth2 Authentication" icon="key">
+    Requires user authorization flow. Requires an auth server and apps for each integration.
+    Most secure method for user-specific access.
+    
+    **Used by:** Gmail, Google Calendar, Spotify, GitHub, Slack, and Discord.
+  </Accordion>
+  <Accordion title="API Key Authentication" icon="lock">
+    Requires developer API key from respective service dashboards.
+    Best for server-to-server authentication.
+    
+    **Used by:** New York Times, Brave Search, and Twilio.
+  </Accordion>
+  <Accordion title="Bearer Token" icon="user-lock">
+    Requires access token. Can be short-lived or long-lived.
+    Common for API access with limited scope.
+    
+    **Used by:** Notion and some GitHub operations.
+  </Accordion>
+  <Accordion title="Basic Authentication" icon="user">
+    Requires username and password. Can also use base64 encoded credentials.
+    
+    **Used by:** Some legacy APIs.
+  </Accordion>
+</AccordionGroup>
+
+## Implementation
+
+The `WildcardClient` class provides methods to register authentication configurations for different APIs. Below are the supported authentication types and how to implement them:
+
+### OAuth2 Authentication
+
+<Note>
+See [OAuth Setup](/authentication/oauth-setup) for more details.
+</Note>
+
+```python
+from wildcard_core.auth.auth_types import AuthType, OAuth2AuthConfig
+
+oauth2_auth = OAuth2AuthConfig(
+    type=AuthType.OAUTH2,
+    token='your_oauth2_token',
+    token_type='Bearer',  # Optional, default -> Bearer
+    refresh_token='your_refresh_token',
+    expires_at=1700000000,  # Unix timestamp
+    scopes={'read', 'write'}  # set of authorized scopes
+)
+```
+
+### API Key Authentication
+
+```python
+from wildcard_core.auth.auth_types import AuthType, ApiKeyAuthConfig
+
+api_key_auth = ApiKeyAuthConfig(type=AuthType.API_KEY, key_value='your_api_key')
+```
+
+### Bearer Token Authentication
+
+```python
+from wildcard_core.auth.auth_types import AuthType, BearerAuthConfig
+
+bearer_auth = BearerAuthConfig(type=AuthType.BEARER, token='your_bearer_token')
+```
+
+### Basic Authentication
+
+Basic authentication supports both direct credentials and base64 encoded formats:
+
+```python
+from wildcard_core.auth.auth_types import AuthType, BasicAuthConfig
+
+# Using username/password
+creds = {
+    "username": "your-username",
+    "password": "your-password",
+    "base64_encode": True,  # Optional, defaults to False
+}
+basic_auth = BasicAuthConfig(type=AuthType.BASIC, credentials=creds)
+
+# Using base64 encoded credentials
+basic_auth = BasicAuthConfig(type=AuthType.BASIC, credentials='your_base64_encoded_credentials')
+```
+
+## Example Usage
+
+Here's an example of registering API Key authentication for the New York Times API:
+
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.auth.auth_types import AuthType, ApiKeyAuthConfig
+from wildcard_core.client.utils.api_service import APIService
+
+client = WildcardClient(api_key='your_wildcard_api_key')
+
+# Register API Key authentication
+api_key_auth = ApiKeyAuthConfig(type=AuthType.API_KEY, key_value='your_nyt_api_key')
+client.register_api_auth(
+    api_id=APIService.NEW_YORK_TIMES,
+    auth_config=api_key_auth
+) 

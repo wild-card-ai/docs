@@ -1,0 +1,161 @@
+---
+title: 'Action Class'
+description: 'Understanding the Action class and available API endpoints'
+---
+
+The `Action` class is a core component that defines all available API endpoints in Wildcard. It provides a type-safe way to reference and use API endpoints across different services.
+
+## Structure
+
+The Action class is organized by API service, with each service containing its own set of endpoints:
+
+```python
+from wildcard_core.models.Action import Action
+
+# Gmail actions
+Action.Gmail.MESSAGES_SEND
+Action.Gmail.DRAFTS_CREATE
+
+# Airtable actions
+Action.Airtable.RECORDS_LIST
+Action.Airtable.RECORDS_CREATE
+```
+
+## Available Services
+
+### Gmail
+
+Gmail actions provide comprehensive email management capabilities:
+
+```python
+class Gmail(str, Enum):
+    # Message Management
+    MESSAGES_SEND = "gmail_users_messages_send"
+    MESSAGES_LIST = "gmail_users_messages_list"
+    MESSAGES_GET = "gmail_users_messages_get"
+    
+    # Draft Management
+    DRAFTS_CREATE = "gmail_users_drafts_create"
+    DRAFTS_UPDATE = "gmail_users_drafts_update"
+    
+    # Thread Management
+    THREADS_LIST = "gmail_users_threads_list"
+    THREADS_GET = "gmail_users_threads_get"
+    
+    # Label Management
+    LABELS_LIST = "gmail_users_labels_list"
+    LABELS_CREATE = "gmail_users_labels_create"
+```
+
+### Airtable
+
+Airtable actions for database operations:
+
+```python
+class Airtable(str, Enum):
+    # Record Operations
+    RECORDS_LIST = "airtable_records_list"
+    RECORDS_CREATE = "airtable_records_create"
+    RECORDS_UPDATE = "airtable_records_update"
+    
+    # Base Management
+    BASES_LIST = "airtable_bases_list"
+    BASES_CREATE = "airtable_bases_create"
+    
+    # View Operations
+    VIEWS_LIST = "airtable_views_list"
+    VIEWS_GET = "airtable_views_get"
+```
+
+## Using Actions
+
+### Direct Reference
+
+You can directly reference actions when calling tools:
+
+```python
+from wildcard_core.models.Action import Action
+
+async def send_email(client):
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_SEND,
+        to="recipient@example.com",
+        subject="Hello",
+        body="This is a test email"
+    )
+```
+
+### Dynamic Resolution
+
+You can also resolve actions from strings:
+
+```python
+# Resolve from string identifier
+action = Action.from_string("gmail_messages_send")
+
+# Resolve from enum name
+action = Action.from_enum_name("Gmail.MESSAGES_SEND")
+```
+
+### Service-Specific Actions
+
+Get all actions for a specific API service:
+
+```python
+from wildcard_core.client.utils.api_service import APIService
+
+# Get all Gmail actions
+gmail_actions = Action.from_api_service(APIService.GMAIL)
+
+# Get all Airtable actions
+airtable_actions = Action.from_api_service(APIService.AIRTABLE)
+```
+
+## Action Properties
+
+Each action includes:
+
+- **Value**: The unique identifier for the action (e.g., "gmail_messages_send")
+- **Description**: Detailed description of what the action does
+- **API Service**: The associated API service
+- **Required Scopes**: OAuth scopes needed for the action (if applicable)
+
+## Example Workflow
+
+Here's a complete example showing how to use actions with the client:
+
+```python
+from wildcard_core.models.Action import Action
+from wildcard_core.client import WildcardClient
+
+async def main():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Create a draft email
+    draft_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_CREATE,
+        to="recipient@example.com",
+        subject="Draft Email",
+        body="This is a draft"
+    )
+    
+    # Get the draft ID
+    draft_id = draft_response.processed_response.data["id"]
+    
+    # Send the draft
+    send_response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_SEND,
+        id=draft_id
+    )
+    
+    print(f"Email sent: {send_response.processed_response.data}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Next Steps
+
+- Explore [Supported APIs](/core/supported-apis)
+- Learn about [Custom Logging](/core/custom-logging)
+- Check out [OpenAI Integration](/openai/overview) 

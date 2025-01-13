@@ -1,0 +1,162 @@
+---
+title: 'Chain Types'
+description: 'Different types of chains supported in Wildcard'
+---
+
+Wildcard supports several types of chains to handle different workflow patterns. Each type is optimized for specific use cases.
+
+## Sequential Chains
+
+Sequential chains execute tools one after another, with each step potentially using results from previous steps.
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import Action
+
+# Sequential chain example
+async def email_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Step 1: List recent emails
+    emails = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_LIST,
+        q="subject:project update after:2024/01/01"
+    )
+    
+    # Step 2: Create draft using results
+    if emails.processed_response.data['messages']:
+        draft = await client.run_tool_with_args(
+            tool_name=Action.Gmail.DRAFTS_CREATE,
+            to="team@example.com",
+            subject="Project Updates Summary",
+            body=f"Found {len(emails.processed_response.data['messages'])} updates"
+        )
+```
+
+## LLM-Augmented Chains
+
+Chains that combine tool calls with LLM operations for enhanced decision making:
+
+```python
+async def smart_email_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    openai_client = OpenAI()
+    
+    # Step 1: List emails
+    emails = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_LIST,
+        q="subject:project update after:2024/01/01"
+    )
+    
+    # Step 2: LLM analysis
+    analysis = await openai_client.chat.completions.create(
+        model="gpt-4",
+        messages=[{
+            "role": "user",
+            "content": f"Analyze these emails and summarize key points: {emails.processed_response.data}"
+        }]
+    )
+    
+    # Step 3: Create draft with analysis
+    await client.run_tool_with_args(
+        tool_name=Action.Gmail.DRAFTS_CREATE,
+        to="team@example.com",
+        subject="Project Updates Analysis",
+        body=analysis.choices[0].message.content
+    )
+```
+
+## Multi-Service Chains
+
+Chains that coordinate operations across multiple API services:
+
+```python
+async def project_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Step 1: Create GitHub issue
+    issue = await client.run_tool_with_args(
+        tool_name=Action.GitHub.ISSUES_CREATE,
+        title="New Feature Request",
+        body="Implementation needed"
+    )
+    
+    # Step 2: Send Slack notification
+    await client.run_tool_with_args(
+        tool_name=Action.Slack.CHAT_POST_MESSAGE,
+        channel="dev-team",
+        text=f"New issue created: {issue.processed_response.data['html_url']}"
+    )
+    
+    # Step 3: Schedule follow-up
+    await client.run_tool_with_args(
+        tool_name=Action.GoogleCalendar.EVENTS_INSERT,
+        summary="Review New Feature Request",
+        description=f"Discuss issue: {issue.processed_response.data['html_url']}"
+    )
+```
+
+## State-Managed Chains
+
+Chains that maintain state between steps for complex workflows:
+
+```python
+class ChainState:
+    def __init__(self):
+        self.context = {}
+        self.results = []
+    
+    def add_result(self, result):
+        self.results.append(result)
+    
+    def update_context(self, key, value):
+        self.context[key] = value
+    
+    def get_context(self, key):
+        return self.context.get(key)
+
+async def managed_workflow():
+    client = WildcardClient(api_key="your_api_key")
+    state = ChainState()
+    
+    # Step 1: List emails
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_LIST
+    )
+    state.add_result(response)
+    
+    # Update context with email count
+    state.update_context('message_count', 
+        len(response.processed_response.data['messages']))
+    
+    # Use context in next step
+    if state.get_context('message_count') > 10:
+        await client.run_tool_with_args(
+            tool_name=Action.Gmail.LABELS_CREATE,
+            name="High Volume"
+        )
+```
+
+## Best Practices
+
+1. **Chain Selection**
+   - Use Sequential Chains for simple, linear workflows
+   - Use LLM-Augmented Chains when decision-making is needed
+   - Use Multi-Service Chains for cross-service operations
+   - Use State-Managed Chains for complex workflows with shared context
+
+2. **State Management**
+   - Keep state minimal and focused
+   - Clear state between chain executions
+   - Use typed state objects for better maintainability
+
+3. **Error Handling**
+   - Implement proper error recovery for each chain type
+   - Consider partial success scenarios
+   - Maintain chain integrity on failures
+
+## Next Steps
+
+- Learn about [Chain Execution](/chains/chain-execution)
+- Explore [Chain Examples](/chains/chain-examples)
+- Check out [Response Handling](/core/processed-response) 

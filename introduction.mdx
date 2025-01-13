@@ -1,71 +1,82 @@
 ---
-title: Introduction
-description: "Welcome to the home of your new documentation"
+title: 'Introduction'
+description: "Integrate and Orchestrate APIs for AI Agents with Wildcard"
 ---
+Wildcard is a developer platform that combines powerful API integrations with intelligent tool selection for AI agents. Today, we provide an interface to 12 popular APIs with 2000+ endpoints, while building towards autonomous tool selection for AI agents.
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.svg"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.svg"
-  alt="Hero Dark"
-/>
+## Why Wildcard?
 
-## Setting up
+Building AI agents that work with multiple APIs presents key challenges:
+1. **Integration Compatibility**: Today's APIs were designed for databases, not for LLMs. APIs require custom wrappers, authentication handling, and custom response processing
+2. **Tool Selection**: As your available tools grow beyond 5-10 functions, LLMs struggle to select the right tools for each task
+3. **Scaling Complexity**: As the number of API integrations grows, so does the complexity of your agent
 
-The first step to world-class documentation is setting up your editing environments.
+Wildcard solves these by providing:
+
+- **Ready-to-use API Integrations**: Pre-built integrations with popular APIs, handling auth, and post-processing responses that fit into LLM context windows
+- **Unified Interface**: Consistent patterns across all APIs, reducing development overhead
+- **Intelligent Tool Selection**: Building towards automated tool selection to help agents choose the right tools (Coming Soon)
+
+## When to use Wildcard
 
 <CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
+  <Card title="API Integrations" icon="network-wired">
+    You need to integrate multiple APIs quickly with consistent patterns
   </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
+  <Card title="Agent Development" icon="robot">
+    You're building AI agents that need to interact with multiple services and APIs
+  </Card>
+  <Card title="Scalability" icon="arrow-up-right-dots">
+    You want infrastructure that grows with you - from basic API integration to autonomous tool selection
+  </Card>
+  <Card title="Rapid Development" icon="bolt">
+    You want to accelerate development by leveraging pre-built integrations and tools
   </Card>
 </CardGroup>
 
-## Make it yours
+## Quick Example
 
-Update your docs to your brand and add valuable content for the best user conversion.
+```python
+from wildcard_core.client import WildcardClient
+from wildcard_core.models.Action import Action
 
-<CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>
+async def send_email():
+    # Initialize client
+    client = WildcardClient(api_key="your_api_key")
+    
+    # Use Gmail API through Wildcard's unified interface
+    response = await client.run_tool_with_args(
+        tool_name=Action.Gmail.MESSAGES_SEND,
+        to="recipient@example.com",
+        subject="Hello from Wildcard",
+        body="Sending emails through our unified API interface!"
+    )
+    
+    return response.processed_response.data
+```
+
+## Available Integrations
+
+Wildcard provides robust integrations across different categories:
+
+- **Communication**: Gmail, Slack, Discord
+- **Productivity**: Google Calendar, Notion, Airtable
+- **Media**: Spotify, YouTube
+- **Developer Tools**: GitHub
+- **Search**: Brave Search, New York Times
+- **Messaging**: Twilio
+
+See all our [supported integrations](/tools/apis).
+
+## Our Vision
+
+Wildcard is building integrations with LLMs as first-class citizens. Our vision is to be the bridge between AI agents and the world's APIs.
+- Connect to any API in the world with LLM-native interfaces
+- Enable AI agents to autonomously select the best tool for a task
+- 10x the experience for developers to integrate AI agents with APIs and tools
+
+## Next Steps
+
+- Follow the [Quickstart](/quickstart) guide
+- Learn about [Authentication](/authentication/overview)
+- Explore [Supported APIs](/tools/overview)

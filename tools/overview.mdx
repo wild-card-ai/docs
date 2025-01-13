@@ -1,0 +1,63 @@
+---
+title: "Tools Overview"
+description: "Understanding Wildcard's tool system and available APIs"
+---
+
+Wildcard provides a comprehensive tool system that allows AI agents to interact with various APIs. Each tool represents an API endpoint with specific functionality, making it easy for agents to perform actions across different services.
+
+## Tool System
+
+The tool system consists of three main components:
+
+1. **Action Class**: Type-safe enum-based system for referencing API endpoints
+2. **Tool Schemas**: OpenAPI-based schemas defining tool parameters and responses
+3. **API Services**: Collection of supported APIs and their authentication methods
+
+## Available APIs
+
+Wildcard currently supports 12 popular APIs with over 2000 endpoints:
+
+<CardGroup cols={3}>
+  <Card title="Gmail" icon="envelope" href="/tools/apis/gmail">
+    Email management
+  </Card>
+  <Card title="Airtable" icon="table" href="/tools/apis/airtable">
+    Database operations
+  </Card>
+  <Card title="Slack" icon="slack" href="/tools/apis/slack">
+    Team communication
+  </Card>
+  <Card title="GitHub" icon="github" href="/tools/apis/github">
+    Repository management
+  </Card>
+  <Card title="Google Calendar" icon="calendar" href="/tools/apis/google-calendar">
+    Calendar operations
+  </Card>
+  <Card title="Spotify" icon="spotify" href="/tools/apis/spotify">
+    Music control
+  </Card>
+  <Card title="YouTube" icon="youtube" href="/tools/apis/youtube">
+    Video management
+  </Card>
+  <Card title="Notion" icon="n" href="/tools/apis/notion">
+    Document management
+  </Card>
+  <Card title="Discord" icon="discord" href="/tools/apis/discord">
+    Community engagement
+  </Card>
+  <Card title="Twilio" icon="message" href="/tools/apis/twilio">
+    SMS messaging
+  </Card>
+  <Card title="New York Times" icon="newspaper" href="/tools/apis/nyt">
+    News content
+  </Card>
+  <Card title="Brave Search" icon="search" href="/tools/apis/brave-search">
+    Web search
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- Explore specific APIs: [Gmail](/tools/apis/gmail), [Airtable](/tools/apis/airtable), [Slack](/tools/apis/slack)
+- Understand [Authentication](/authentication/overview)
+- Check out [OpenAI Integration](/openai/overview) 

@@ -1,0 +1,280 @@
+---
+title: 'FastAPI Implementation'
+description: 'Build a FastAPI service for Wildcard Chains'
+---
+
+This guide demonstrates how to build a FastAPI service that manages chains. We'll break down the implementation into modular components for clarity.
+
+## Project Structure
+
+```
+chains/
+├── main.py              # FastAPI application
+├── models/
+│   ├── chain.py        # Chain data models
+│   └── response.py     # Response models
+├── services/
+│   ├── chain.py        # Chain execution logic
+│   └── storage.py      # Chain storage service
+└── utils/
+    └── auth.py         # Authentication utilities
+```
+
+## Chain Models
+
+First, define the data models in `models/chain.py`:
+
+```python
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel
+
+class ChainNode(BaseModel):
+    id: str
+    name: str
+    prompt: str
+    toolIndex: str
+    selectedService: str
+    selectedAction: str
+    fixedArgs: Optional[Dict[str, Any]] = None
+    isLLMOnly: Optional[bool] = False
+
+class ChainConfig(BaseModel):
+    nodes: List[ChainNode]
+    system_prompt: str
+
+class ChainMetadata(BaseModel):
+    chain_id: str
+    user_id: str
+    created_at: str
+    updated_at: str
+    config: ChainConfig
+```
+
+## Chain Service
+
+Create the chain execution logic in `services/chain.py`:
+
+```python
+from wildcard_openai import WildcardClient
+from models.chain import ChainConfig, ChainNode
+from typing import Dict, Any
+
+class ChainService:
+    def __init__(self, wildcard_api_key: str):
+        self.client = WildcardClient(api_key=wildcard_api_key)
+    
+    async def execute_node(self, node: ChainNode, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single chain node"""
+        if node.isLLMOnly:
+            return await self._execute_llm_node(node, context)
+        return await self._execute_tool_node(node, context)
+    
+    async def _execute_tool_node(self, node: ChainNode, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a tool node"""
+        args = {**(node.fixedArgs or {})}
+        # Add dynamic args from context if needed
+        if node.selectedAction in context:
+            args.update(context[node.selectedAction])
+            
+        response = await self.client.run_tool_with_args(
+            tool_name=node.selectedAction,
+            **args
+        )
+        return response.processed_response.data
+    
+    async def _execute_llm_node(self, node: ChainNode, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute an LLM-only node"""
+        messages = [
+            {"role": "system", "content": node.prompt},
+            {"role": "user", "content": str(context)}
+        ]
+        response = await self.client.run_completion(messages=messages)
+        return {"result": response.choices[0].message.content}
+    
+    async def execute_chain(self, config: ChainConfig, user_id: str) -> Dict[str, Any]:
+        """Execute a complete chain"""
+        context = {"user_id": user_id}
+        results = []
+        
+        for node in config.nodes:
+            try:
+                result = await self.execute_node(node, context)
+                results.append({
+                    "node_id": node.id,
+                    "status": "success",
+                    "result": result
+                })
+                # Update context with node result
+                context[node.id] = result
+            except Exception as e:
+                results.append({
+                    "node_id": node.id,
+                    "status": "error",
+                    "error": str(e)
+                })
+                break
+        
+        return {
+            "status": "success" if all(r["status"] == "success" for r in results) else "error",
+            "results": results,
+            "context": context
+        }
+```
+
+## Storage Service
+
+Implement chain storage in `services/storage.py`:
+
+```python
+from datetime import datetime
+from models.chain import ChainConfig, ChainMetadata
+from typing import List, Optional
+
+class ChainStorageService:
+    def __init__(self, storage_connection_string: str):
+        self.connection_string = storage_connection_string
+        # Initialize your storage client here (e.g., Azure Blob Storage)
+    
+    async def save_chain(self, user_id: str, config: ChainConfig) -> ChainMetadata:
+        """Save a chain configuration"""
+        chain_id = f"chain_{datetime.utcnow().timestamp()}"
+        now = datetime.utcnow().isoformat()
+        
+        metadata = ChainMetadata(
+            chain_id=chain_id,
+            user_id=user_id,
+            created_at=now,
+            updated_at=now,
+            config=config
+        )
+        
+        # Save to storage
+        await self._save_metadata(metadata)
+        return metadata
+    
+    async def get_chain(self, chain_id: str, user_id: str) -> Optional[ChainMetadata]:
+        """Retrieve a chain configuration"""
+        return await self._load_metadata(chain_id, user_id)
+    
+    async def list_chains(self, user_id: str) -> List[ChainMetadata]:
+        """List all chains for a user"""
+        return await self._list_user_chains(user_id)
+```
+
+## FastAPI Application
+
+Finally, create the FastAPI application in `main.py`:
+
+```python
+from fastapi import FastAPI, HTTPException, Depends
+from models.chain import ChainConfig, ChainMetadata
+from services.chain import ChainService
+from services.storage import ChainStorageService
+from typing import List
+import os
+
+app = FastAPI(title="Wildcard Chains API")
+
+# Initialize services
+chain_service = ChainService(wildcard_api_key=os.getenv("WILDCARD_API_KEY"))
+storage_service = ChainStorageService(
+    storage_connection_string=os.getenv("STORAGE_CONNECTION_STRING")
+)
+
+# Dependencies
+async def get_user_id(authorization: str = Header(...)) -> str:
+    """Extract user_id from authorization header"""
+    # Implement your auth logic here
+    return "user_123"
+
+@app.post("/chains/", response_model=ChainMetadata)
+async def create_chain(
+    config: ChainConfig,
+    user_id: str = Depends(get_user_id)
+):
+    """Create a new chain"""
+    return await storage_service.save_chain(user_id, config)
+
+@app.get("/chains/", response_model=List[ChainMetadata])
+async def list_chains(user_id: str = Depends(get_user_id)):
+    """List all chains for a user"""
+    return await storage_service.list_chains(user_id)
+
+@app.get("/chains/{chain_id}", response_model=ChainMetadata)
+async def get_chain(
+    chain_id: str,
+    user_id: str = Depends(get_user_id)
+):
+    """Get a specific chain"""
+    chain = await storage_service.get_chain(chain_id, user_id)
+    if not chain:
+        raise HTTPException(status_code=404, detail="Chain not found")
+    return chain
+
+@app.post("/chains/{chain_id}/execute")
+async def execute_chain(
+    chain_id: str,
+    user_id: str = Depends(get_user_id)
+):
+    """Execute a chain"""
+    chain = await storage_service.get_chain(chain_id, user_id)
+    if not chain:
+        raise HTTPException(status_code=404, detail="Chain not found")
+    
+    return await chain_service.execute_chain(chain.config, user_id)
+```
+
+## Usage Example
+
+Here's how to use the API:
+
+```python
+import httpx
+
+async def run_example():
+    async with httpx.AsyncClient() as client:
+        # Create a chain
+        chain_config = {
+            "nodes": [
+                {
+                    "id": "list_emails",
+                    "name": "List Recent Emails",
+                    "prompt": "List recent project emails",
+                    "toolIndex": "gmail",
+                    "selectedService": "gmail",
+                    "selectedAction": "Action.Gmail.MESSAGES_LIST",
+                    "fixedArgs": {
+                        "q": "subject:project after:2024/01/01"
+                    }
+                },
+                {
+                    "id": "analyze_emails",
+                    "name": "Analyze Emails",
+                    "prompt": "Analyze the email contents",
+                    "isLLMOnly": True
+                }
+            ],
+            "system_prompt": "Process project emails"
+        }
+        
+        # Create chain
+        response = await client.post(
+            "http://localhost:8000/chains/",
+            json=chain_config,
+            headers={"Authorization": "Bearer your-token"}
+        )
+        chain_id = response.json()["chain_id"]
+        
+        # Execute chain
+        result = await client.post(
+            f"http://localhost:8000/chains/{chain_id}/execute",
+            headers={"Authorization": "Bearer your-token"}
+        )
+        print(result.json())
+```
+
+## Next Steps
+
+- Learn about [Chain Types](/chains/chain-types)
+- Explore [Chain Examples](/chains/chain-examples)
+- Check out [Chain Architecture](/chains/chain-architecture) 

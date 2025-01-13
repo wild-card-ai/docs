@@ -1,0 +1,160 @@
+---
+title: 'Airtable'
+description: 'Interact with Airtable bases, tables, and records'
+---
+
+## Overview
+
+The Airtable integration allows you to interact with Airtable bases, tables, and records. You can perform operations like listing bases, managing tables, and manipulating records.
+
+## Authentication
+
+Airtable requires an API key for authentication. Register your API key with the WildcardClient:
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import APIService
+
+client = WildcardClient(api_key="your_wildcard_api_key")
+client.register_api_auth(
+    api_service=APIService.AIRTABLE,
+    auth_config={"api_key": "your_airtable_api_key"}
+)
+```
+
+## Available Actions
+
+| Action | Description | Required Arguments | Optional Arguments |
+|--------|-------------|-------------------|-------------------|
+| `LIST_BASES` | List all accessible bases | None | None |
+| `LIST_TABLES` | List tables in a base | `base_id` | None |
+| `LIST_RECORDS` | List records in a table | `base_id`, `table_name` | `view`, `fields`, `max_records`, `page_size` |
+| `GET_RECORD` | Get a specific record | `base_id`, `table_name`, `record_id` | None |
+| `CREATE_RECORD` | Create a new record | `base_id`, `table_name`, `fields` | None |
+| `UPDATE_RECORD` | Update an existing record | `base_id`, `table_name`, `record_id`, `fields` | None |
+| `DELETE_RECORD` | Delete a record | `base_id`, `table_name`, `record_id` | None |
+
+## Example Usage
+
+### List Records from a Table
+
+```python
+from wildcard_openai import WildcardClient
+from wildcard_core.models import Action
+
+async def list_records():
+    client = WildcardClient(api_key="your_wildcard_api_key")
+    client.register_api_auth(
+        api_service=APIService.AIRTABLE,
+        auth_config={"api_key": "your_airtable_api_key"}
+    )
+    
+    response = await client.run_tool_with_args(
+        tool_name=Action.Airtable.LIST_RECORDS,
+        base_id="your_base_id",
+        table_name="your_table_name",
+        max_records=100
+    )
+    
+    return response.processed_response.data
+```
+
+### Create and Update Records
+
+```python
+async def manage_records():
+    client = WildcardClient(api_key="your_wildcard_api_key")
+    client.register_api_auth(
+        api_service=APIService.AIRTABLE,
+        auth_config={"api_key": "your_airtable_api_key"}
+    )
+    
+    # Create a record
+    create_response = await client.run_tool_with_args(
+        tool_name=Action.Airtable.CREATE_RECORD,
+        base_id="your_base_id",
+        table_name="your_table_name",
+        fields={
+            "Name": "New Project",
+            "Status": "In Progress",
+            "Due Date": "2024-03-01"
+        }
+    )
+    
+    record_id = create_response.processed_response.data["id"]
+    
+    # Update the record
+    update_response = await client.run_tool_with_args(
+        tool_name=Action.Airtable.UPDATE_RECORD,
+        base_id="your_base_id",
+        table_name="your_table_name",
+        record_id=record_id,
+        fields={
+            "Status": "Completed"
+        }
+    )
+    
+    return update_response.processed_response.data
+```
+
+## Error Handling
+
+Common errors you might encounter:
+
+1. **Authentication Errors**
+   - Invalid API key
+   - Expired API key
+   - Missing required permissions
+
+2. **Resource Errors**
+   - Base not found
+   - Table not found
+   - Record not found
+   - Invalid field names
+
+3. **Rate Limiting**
+   - Too many requests
+   - Exceeded API quota
+
+Handle errors appropriately:
+
+```python
+from wildcard_core.exceptions import AuthenticationError, ResourceNotFoundError
+
+async def handle_airtable_errors():
+    try:
+        response = await client.run_tool_with_args(
+            tool_name=Action.Airtable.LIST_RECORDS,
+            base_id="your_base_id",
+            table_name="your_table_name"
+        )
+    except AuthenticationError as e:
+        print(f"Authentication failed: {e}")
+    except ResourceNotFoundError as e:
+        print(f"Resource not found: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+```
+
+## Best Practices
+
+1. **Performance**
+   - Use field selection to limit data retrieval
+   - Implement pagination for large datasets
+   - Cache frequently accessed data
+
+2. **Security**
+   - Store API keys securely
+   - Use minimal required permissions
+   - Validate user input
+
+3. **Error Handling**
+   - Implement proper error recovery
+   - Log errors for debugging
+   - Provide meaningful error messages
+
+## Next Steps
+
+- Learn about [OAuth Setup](/authentication/oauth-setup)
+- Explore [Chain Examples](/chains/chain-examples)
+- Check out [Available Actions](/tools/action-class) 
