@@ -175,35 +175,6 @@ async def run_tools(
     """
 ```
 
-## Error Handling
-
-The client throws several types of exceptions:
-
-```python
-from wildcard_core.errors import (
-    AuthenticationError,    # Authentication issues
-    ToolExecutionError,     # Tool execution failures
-    ValidationError,        # Invalid arguments
-    RateLimitError,        # API rate limits
-    ToolNotFoundError      # Unknown tool requested
-)
-
-try:
-    result = await client.run_tools(completion)
-except AuthenticationError as e:
-    # Handle authentication issues
-    print(f"Auth failed: {e.message}")
-    if e.auth_info:
-        print(f"Required scopes: {e.auth_info.required_scopes}")
-except ToolExecutionError as e:
-    # Handle execution failures
-    print(f"Tool failed: {e.message}")
-    print(f"Response: {e.response}")
-except ValidationError as e:
-    # Handle invalid arguments
-    print(f"Invalid args: {e.validation_errors}")
-```
-
 ## Best Practices
 
 1. **Client Initialization**
