@@ -102,7 +102,7 @@ action = Action.from_enum_name("Gmail.MESSAGES_SEND")
 Get all actions for a specific API service:
 
 ```python
-from wildcard_core.client.utils.api_service import APIService
+from wildcard_core.models import APIService
 
 # Get all Gmail actions
 gmail_actions = Action.from_api_service(APIService.GMAIL)

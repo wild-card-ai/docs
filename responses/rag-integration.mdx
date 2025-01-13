@@ -212,7 +212,7 @@ class RAGSystem:
         
         # Generate response with OpenAI
         response = await self.openai.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Use the following context to answer the question."},
                 {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"}

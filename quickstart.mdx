@@ -59,15 +59,21 @@ from openai import AsyncOpenAI
 from wildcard_openai import WildcardClient
 from wildcard_openai.WildcardClient import ToolFormat
 from wildcard_core.models import APIService
+from wildcard_core.auth.auth_types import ApiKeyAuthConfig
 
 # Initialize clients
 wildcard = WildcardClient(api_key="your_wildcard_api_key")
 openai = AsyncOpenAI(api_key="your_openai_api_key")
 
+auth_config = ApiKeyAuthConfig(
+    type=ApiKeyAuthType.API_KEY, 
+    api_key="your_brave_search_api_key"
+)
+
 # Register API authentication for Brave Search
 wildcard.register_api_auth(
     APIService.BRAVE_SEARCH,
-    {"api_key": "your_brave_search_api_key"}
+    auth_config
 )
 
 # Get tool prompt and format
@@ -82,7 +88,7 @@ messages = [
 
 # Run OpenAI completion with tool
 completion = await openai.chat.completions.create(
-    model="gpt-4",
+    model="gpt-4o",
     messages=messages,
     tools=wildcard.get_tool(tool_name, format=ToolFormat.OPENAI),
     tool_choice="required",

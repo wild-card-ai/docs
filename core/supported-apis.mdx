@@ -51,7 +51,7 @@ Wildcard supports a growing list of popular APIs, each with comprehensive endpoi
 Use the `APIService` enum to reference supported services:
 
 ```python
-from wildcard_core.client.utils.api_service import APIService
+from wildcard_core.models import APIService
 
 # Available services
 APIService.GMAIL
@@ -124,7 +124,7 @@ Here's how to use different APIs with Wildcard:
 ```python
 from wildcard_core.client import WildcardClient
 from wildcard_core.models.Action import Action
-from wildcard_core.client.utils.api_service import APIService
+from wildcard_core.models import APIService
 
 async def main():
     client = WildcardClient(api_key="your_api_key")
