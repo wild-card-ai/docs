@@ -88,42 +88,45 @@ from wildcard_core.models import APIService
 from wildcard_openai.WildcardClient import ToolFormat
 from wildcard_core.client import ProcessedResponse, ProcessedResponseData   
 
-# Initialize clients
-wildcard = WildcardClient(
-    api_key="your_wildcard_api_key",
-    index_name="your_index_name"
-)
-openai = AsyncOpenAI(api_key="your_openai_api_key")
+async def run(user_message: str):
+    # Initialize clients
+    wildcard = WildcardClient(
+        api_key="your_wildcard_api_key",
+        index_name="your_index_name"
+    )
+    openai = AsyncOpenAI(api_key="your_openai_api_key")
 
-# 1. Configure API integrations
-wildcard.register_api_auth(
-    APIService.GMAIL,
-    {"client_id": "...", "client_secret": "..."}
-)
+    # 1. Configure API integrations - see Authentication docs
+    wildcard.register_api_auth(
+        APIService.GMAIL,
+        {"client_id": "...", "client_secret": "..."}
+    )
 
-# 2. Add tools to the client
-wildcard.add_tool_by_api_service(APIService.GMAIL)
+    # 2. Add tools to the client
+    wildcard.add_tool_by_api_service(APIService.GMAIL)
 
-# 3. Get tools in OpenAI format
-tools = [wildcard.get_tool(Action.Gmail.MESSAGES_SEND, format=ToolFormat.OPENAI)]
+    # 3. Get tools in OpenAI format
+    tools = [wildcard.get_tool(Action.Gmail.MESSAGES_SEND, format=ToolFormat.OPENAI)]
 
-# 4. Run OpenAI completion with tool calling
-completion = await openai.chat.completions.create(
-    model="gpt-4o",
-    messages=[{
-        "role": "user",
-        "content": user_message
-    }],
-    tools=tools,
-    tool_choice="auto"
-)
+    # 4. Run OpenAI completion with tool calling
+    completion = await openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[{
+            "role": "user",
+            "content": user_message
+        }],
+        tools=tools,
+        tool_choice="auto"
+    )
 
-# 5. Execute tool calls and process response
-result: ProcessedResponse = await wildcard.run_tools(completion)
+    # 5. Execute tool calls and process response
+    result: ProcessedResponse = await wildcard.run_tools(completion)
 
-# 6. Access different response components
-context: ProcessedResponseData = result.processed_response.data  # Context optimized response
-documents = result.processed_response.documents  # Any documents/attachments
+    # 6. Access different response components
+    context: ProcessedResponseData = result.processed_response.data  # Context optimized response
+    documents = result.processed_response.documents  # Any documents/attachments
+
+    return context, documents
 ```
 
 ## Next Steps
