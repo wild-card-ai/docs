@@ -72,27 +72,6 @@ Wildcard solves these by providing:
   </Card>
 </CardGroup>
 
-## Quick Example
-
-```python
-from wildcard_core.client import WildcardClient
-from wildcard_core.models.Action import Action
-
-async def send_email():
-    # Initialize client
-    client = WildcardClient(api_key="your_api_key")
-    
-    # Use Gmail API through Wildcard's unified interface
-    response = await client.run_tool_with_args(
-        tool_name=Action.Gmail.MESSAGES_SEND,
-        to="recipient@example.com",
-        subject="Hello from Wildcard",
-        body="Sending emails through our unified API interface!"
-    )
-    
-    return response.processed_response.data
-```
-
 ## Integrations
 
 Wildcard provides robust integrations across different categories:
