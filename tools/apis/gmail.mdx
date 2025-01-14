@@ -25,6 +25,27 @@ Follow these steps to set up authentication:
 1. Follow our [OAuth2 setup guide](/authentication/oauth2) to configure Gmail authentication
 2. Register the OAuth2 credentials with your client.
 
+## Gotchas
+
+Gmail requires the `gmail.addons.current.message.metadata` and `gmail.metadata` scopes based on whether you are accessing the email body or not. By default, Wildcard will access the email body, but these endpoints check for all scopes to be available. This is a known issue with Gmail that the Google team has not fixed - see [this issue](https://issuetracker.google.com/issues/115621456).
+
+To work around this, you can patch your gmail scopes when registering client authentication.
+```python
+def patch_gmail_scopes(scopes: Set[str]) -> Set[str]:
+    # Adds the 'https://www.googleapis.com/auth/gmail.addons.current.message.metadata' and 'https://www.googleapis.com/auth/gmail.metadata' scopes to the list of scopes
+    scopes.add('https://www.googleapis.com/auth/gmail.addons.current.message.metadata')
+    scopes.add('https://www.googleapis.com/auth/gmail.metadata')
+    return scopes
+
+authorization_flow, scopes = client.get_oauth_info_by_api(APIService.GMAIL)
+auth_config = OAuth2AuthConfig(
+    ...,
+    scopes=' '.join(list(patch_gmail_scopes(scopes)))
+)
+client.register_api_auth(APIService.GMAIL, auth_config)
+```
+
+
 ## Available Actions
 
 Here's a complete list of all available Gmail actions:

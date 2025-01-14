@@ -22,32 +22,47 @@ Here's a complete example using the Brave Search API
 
 ```python
 from wildcard_openai import WildcardClient
+from wildcard_core.auth.auth_types import ApiKeyAuthConfig, AuthType
 from wildcard_core.models import APIService, Action
+import asyncio
 
-# Initialize client with your API key
-client = WildcardClient(
-  api_key="your_wildcard_api_key",
-  index_name="your_index_name"
-)
+BRAVE_API_KEY="<your_brave_api_key>"
 
-# Register API authentication for Brave Search
-client.register_api_auth(
-    APIService.BRAVE_SEARCH,
-    {"api_key": "your_brave_search_api_key"}
-)
+async def main():
 
-# Use Brave Search API
-response = await client.run_tool_with_args(
-    tool_name=Action.BraveSearch.SEARCH,
-    query="latest AI developments",
-    count=5
-)
+    # Initialize client with your API key
+    client = WildcardClient(
+    api_key="your_wildcard_api_key",
+    index_name="c6plus"
+    )
 
-# Process structured response
-results = response.processed_response.data['results']
-for result in results:
-    print(f"Title: {result['title']}")
-    print(f"URL: {result['url']}\n")
+    # Register API authentication for Brave Search
+    client.register_api_auth(
+        APIService.BRAVE_SEARCH,
+        ApiKeyAuthConfig(
+            type=AuthType.API_KEY,
+            key_value=BRAVE_API_KEY,
+            key_name="X-Subscription-Token"
+        )
+    )
+
+    # Use Brave Search API
+    response = await client.run_tool_with_args(
+        tool_name=Action.BraveSearch.SEARCH,
+        q="latest AI developments",
+        count=10
+    )
+
+    # Process structured response
+    results = response.processed_response.data
+    
+    for result in results["web"]["results"]:
+        print(result["title"])
+        print(result["url"])
+        print("\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ## Using OpenAI Function Calling
@@ -56,49 +71,63 @@ Integrate Wildcard with OpenAI to fill out parameters for tools automatically
 
 ```python
 from openai import AsyncOpenAI
-from wildcard_openai import WildcardClient
+from wildcard_openai import Action, WildcardClient
 from wildcard_openai.WildcardClient import ToolFormat
 from wildcard_core.models import APIService
-from wildcard_core.auth.auth_types import ApiKeyAuthConfig
+from wildcard_core.auth.auth_types import ApiKeyAuthConfig, AuthType
+import asyncio
+import os
 
-# Initialize clients
-wildcard = WildcardClient(api_key="your_wildcard_api_key")
-openai = AsyncOpenAI(api_key="your_openai_api_key")
+async def main():
+    # Initialize clients
+    wildcard = WildcardClient(
+        api_key="your_wildcard_api_key",    # TODO: Replace
+        index_name="your_index_name"        # TODO: Replace
+    )
+    openai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-auth_config = ApiKeyAuthConfig(
-    type=ApiKeyAuthType.API_KEY, 
-    api_key="your_brave_search_api_key"
-)
+    auth_config = ApiKeyAuthConfig(
+        type=AuthType.API_KEY, 
+        key_value="<your_brave_api_key>", # TODO: Replace
+        key_name="X-Subscription-Token"
+    )
 
-# Register API authentication for Brave Search
-wildcard.register_api_auth(
-    APIService.BRAVE_SEARCH,
-    auth_config
-)
+    # Register API authentication for Brave Search
+    wildcard.register_api_auth(
+        APIService.BRAVE_SEARCH,
+        auth_config
+    )
 
-# Get tool prompt and format
-tool_name = Action.BraveSearch.SEARCH
-tool_prompt = wildcard.get_tool_prompt(tool_name)
+    # Get tool prompt and format
+    tool_name = Action.BraveSearch.SEARCH
+    await wildcard.add_tool(tool_name)
+    
+    tool_prompt = wildcard.get_tool_prompt(tool_name)
 
-# Build messages
-messages = [
-    {"role": "system", "content": tool_prompt},
-    {"role": "user", "content": "Search for the latest developments in quantum computing"}
-]
+    # Build messages
+    messages = [
+        {"role": "system", "content": tool_prompt},
+        {"role": "user", "content": "Tell me about the LA Fires"}
+    ]
 
-# Run OpenAI completion with tool
-completion = await openai.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    tools=wildcard.get_tool(tool_name, format=ToolFormat.OPENAI),
-    tool_choice="required",
-    temperature=0
-)
+    # Run OpenAI completion with tool
+    completion = await openai.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        tools=[wildcard.get_tool(tool_name, format=ToolFormat.OPENAI)],
+        tool_choice="required",
+        temperature=0
+    )
+        
+    
+    # Run with fixed arguments of 10 results
+    if completion.choices[0].message.tool_calls:
+        result = await wildcard.run_tools(completion, {"count": 10})
+        print(result.processed_response.data)
 
-# Execute the tool call
-if completion.choices[0].message.tool_calls:
-    result = await wildcard.run_tools(completion)
-    print(result.processed_response.data)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ## What's Next?
