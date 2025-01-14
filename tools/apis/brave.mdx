@@ -12,6 +12,17 @@ Brave Search requires API key authentication. Follow these steps to set up authe
 1. Create a Brave Search API key at [https://api.search.brave.com/app/keys](https://api.search.brave.com/app/keys)
 2. Register your API key with your client
 
+```python
+wildcard.register_api_auth(
+    APIService.BRAVE_SEARCH,
+    ApiKeyAuthConfig(
+        type=AuthType.API_KEY, 
+        key_value="<your_brave_api_key>", # TODO: Replace
+        key_name="X-Subscription-Token"
+    )
+)
+```
+
 ## Available Actions
 
 Here's a complete list of all available Brave Search actions:
