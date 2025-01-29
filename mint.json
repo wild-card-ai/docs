@@ -2,6 +2,11 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Wildcard",
   "favicon": "/logo/asterisk.png",
+  "logo": {
+    "light": "/logo/wildcard-logo1.png",
+    "dark": "/logo/wildcard-logo1.png",
+    "href": "https://wild-card.ai"
+  },
   "colors": {
     "primary": "#3366cc",
     "light": "#6699ff",
@@ -10,6 +15,9 @@
       "from": "#003399",
       "to": "#6699ff"
     }
+  },
+  "primaryTab": {
+    "name": "API Reference"
   },
   "topbarLinks": [
     {
@@ -23,18 +31,23 @@
   },
   "tabs": [
     {
+      "name": "Blog",
+      "url": "agentsjson"
+    },
+    {
       "name": "API Reference",
       "url": "api-reference"
     }
   ],
-  "anchors": [
-    {
-      "name": "Wildcard",
-      "icon": "asterisk",
-      "url": "https://wild-card.ai"
-    }
-  ],
+  "anchors": [],
   "navigation": [
+    {
+      "group": "Blog",
+      "pages": [
+        "agentsjson/introduction",
+        "agentsjson/schema"
+      ]
+    },
     {
       "group": "Getting Started",
       "pages": [

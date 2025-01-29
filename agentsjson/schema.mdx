@@ -1,0 +1,416 @@
+---
+title: 'Schema Reference'
+description: 'The complete agents.json schema specification'
+---
+
+A reference of the `agents.json` schema, providing context and explanations for each element. This reference can be used by implementers and consumers (including LLMs and developers) to better understand how to configure and use `agents.json` in a workflow.
+
+## Overview
+
+The schema defines a JSON-based configuration known as `agents.json`. The file contains:
+
+1. A specification version
+2. Info object describing title, version, and description
+3. A list of API sources ("sources")
+4. Optional overrides to modify specific fields in any source operation
+5. A set of flows, each representing a chain of API calls and data mappings
+
+Use this schema to create cohesive, multi-step workflows that orchestrate API calls, perform data transformations, and manage input/output parameters in a standardized, documented manner.
+
+## Top-Level Structure
+
+The `agents.json` schema is an object with the following required properties:
+
+- `agentsJson`
+- `info`
+- `sources`
+- `flows`
+
+Additionally, it may include optional `overrides` and other properties as needed.
+
+### 1. agentsJson
+
+- **Type**: string
+- **Description**: Specifies the version of the `agents.json` schema being used. Must follow [Semantic Versioning (SemVer)](https://semver.org/).
+
+Example:
+```json
+{
+  "agentsJson": "1.0.0"
+}
+```
+
+### 2. info
+
+- **Type**: object
+- **Required Properties**:
+  - `title` (string)
+  - `version` (string)
+  - `description` (string)
+- **Description**: Basic metadata for the `agents.json` file.
+
+#### Properties
+
+- **info.title**
+  - Type: string
+  - Description: The full name or headline of this `agents.json` specification
+
+- **info.version**
+  - Type: string
+  - Description: Must follow [Semantic Versioning (SemVer)](https://semver.org)
+
+- **info.description**
+  - Type: string
+  - Description: High-level summary or explanation of what this `agents.json` file accomplishes
+
+Example:
+```json
+{
+  "info": {
+    "title": "Order Processing Agent",
+    "version": "1.0.0",
+    "description": "A set of flows for handling order submissions and payment validations."
+  }
+}
+```
+
+### 3. sources
+
+- **Type**: array
+- **Description**: An array declaring external API specifications. Each source references an OpenAPI 3+ spec to allow chaining multiple APIs.
+- **Required Properties** (per item):
+  - `id` (string)
+  - `path` (string)
+
+#### Properties
+
+- **source.id**
+  - Type: string
+  - Description: A unique, human-readable identifier in snake_case. Used to reference the source from flows or overrides.
+
+- **source.path**
+  - Type: string
+  - Description: The file path or URL to the OpenAPI specification for this source.
+
+Example:
+```json
+{
+  "sources": [
+    {
+      "id": "user_service",
+      "path": "openapi/user_service.yaml"
+    },
+    {
+      "id": "payment_gateway", 
+      "path": "openapi/payment_api.yaml"
+    }
+  ]
+}
+```
+
+### 4. overrides (Optional)
+
+- **Type**: array
+- **Description**: An optional array of objects allowing you to override or customize specific fields in any API operation.
+- **Required Properties** (per override):
+  - `sourceId` (string)
+  - `operationId` (string)
+  - `fieldPath` (string)
+  - `value` (string | object | array | boolean | integer | number)
+
+Example:
+```json
+{
+  "overrides": [
+    {
+      "sourceId": "payment_gateway",
+      "operationId": "processPayment",
+      "fieldPath": "parameters.0.required",
+      "value": true
+    }
+  ]
+}
+```
+
+### 5. flows
+
+- **Type**: array
+- **Description**: Each item in flows defines a workflow that consists of multiple API calls ("actions") and data links between them.
+- **Required Properties** (per flow):
+  - `id` (string)
+  - `title` (string)
+  - `description` (string)
+  - `actions` (array)
+  - `fields` (object)
+
+#### 5.1 Flow Identification
+
+1. **flow.id**
+   - Type: string
+   - Description: A unique identifier in snake_case for referencing the flow
+
+2. **flow.title**
+   - Type: string
+   - Description: A short, human-readable title for the flow
+
+3. **flow.description**
+   - Type: string
+   - Description: Explains the purpose, sequence, and expected outcome of the flow
+
+Example:
+```json
+{
+  "flows": [
+    {
+      "id": "process_order_flow",
+      "title": "Process Order Flow",
+      "description": "Handles all steps from order creation to payment confirmation.",
+      "...": "..."
+    }
+  ]
+}
+```
+
+#### 5.2 actions
+
+- **Type**: array
+- **Required Properties** (per action):
+  - `id` (string)
+  - `sourceId` (string)
+  - `operationId` (string)
+- **Description**: Each action corresponds to an API call within a flow.
+
+Example:
+```json
+"actions": [
+  {
+    "id": "create_order",
+    "sourceId": "user_service",
+    "operationId": "createOrder"
+  },
+  {
+    "id": "charge_card",
+    "sourceId": "payment_gateway",
+    "operationId": "chargeCreditCard"
+  }
+]
+```
+
+#### 5.3 links
+
+- **Type**: array
+- **Description**: Describes how data should flow between actions or from the flow's inputs to any action parameters.
+- **Required Properties** (per link):
+  - `origin` (object)
+  - `target` (object)
+
+##### Properties
+
+- **origin**
+  - Must contain:
+    - `actionId` (string or null)
+    - `fieldPath` (string; JSON path expression)
+
+- **target**
+  - Must contain:
+    - `actionId` (string)
+    - `fieldPath` (string; JSON path expression)
+
+Example:
+```json
+{
+  "origin": {
+    "actionId": "create_order",
+    "fieldPath": "response.data.orderId"
+  },
+  "target": {
+    "actionId": "charge_card",
+    "fieldPath": "parameters.orderId"
+  }
+}
+```
+
+#### 5.4 fields
+
+- **Type**: object
+- **Description**: Describes the interface for a flow, including its parameters, optional requestBody, and responses.
+
+##### 5.4.1 fields.parameters
+
+- **Type**: array
+- **Description**: Defines the input parameters for the flow.
+
+Example:
+```json
+"parameters": [
+  {
+    "name": "customer_id",
+    "description": "The ID of the customer placing the order",
+    "required": true,
+    "type": "string"
+  }
+]
+```
+
+##### 5.4.2 fields.requestBody (Optional)
+
+- **Type**: object
+- **Description**: Specifies the schema for the request body if required.
+- **Keys**:
+  - `content` (object): A map of MIME type to an object with "schema" and optional "example"
+  - `required` (boolean): Whether this request body is mandatory
+
+Example:
+```json
+"requestBody": {
+  "content": {
+    "application/json": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array" }
+        }
+      },
+      "example": {
+        "items": ["item1", "item2"]
+      }
+    }
+  },
+  "required": true
+}
+```
+
+##### 5.4.3 fields.responses
+
+- **Type**: object
+- **Required**: `success` (object)
+- **Description**: Contains the schema that describes the successful flow's output.
+
+Example:
+```json
+"responses": {
+  "success": {
+    "type": "object",
+    "properties": {
+      "orderId": { "type": "string" }
+    }
+  },
+  "example": {
+    "orderId": "abc123"
+  }
+}
+```
+
+## Practical Example
+
+Let's look at a complete example that demonstrates how these components work together. This example shows an `agents.json` implementation for a weather service that chains together location and weather APIs:
+
+```json
+{
+  "agentsJson": "1.0.0",
+  "info": {
+    "title": "Weather Service Agent",
+    "version": "1.0.0",
+    "description": "Fetches weather data based on user location"
+  },
+  "sources": [
+    {
+      "id": "locationAPI",
+      "path": "openapi/location_service.yaml"
+    },
+    {
+      "id": "weatherAPI",
+      "path": "openapi/weather_service.yaml"
+    }
+  ],
+  "flows": [
+    {
+      "id": "get_weather_flow",
+      "title": "Fetch Weather Based on Location",
+      "description": "Gets the current weather using the user's location.",
+      "actions": [
+        {
+          "id": "getLocation",
+          "sourceId": "locationAPI",
+          "operationId": "getUserLocation"
+        },
+        {
+          "id": "getWeather",
+          "sourceId": "weatherAPI",
+          "operationId": "getCurrentWeather"
+        }
+      ],
+      "links": [
+        {
+          "origin": {
+            "actionId": "getLocation",
+            "fieldPath": "response.latitude"
+          },
+          "target": {
+            "actionId": "getWeather",
+            "fieldPath": "parameters.lat"
+          }
+        },
+        {
+          "origin": {
+            "actionId": "getLocation",
+            "fieldPath": "response.longitude"
+          },
+          "target": {
+            "actionId": "getWeather",
+            "fieldPath": "parameters.lon"
+          }
+        }
+      ],
+      "fields": {
+        "parameters": [
+          {
+            "name": "lat",
+            "description": "Latitude for weather data",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "lon",
+            "description": "Longitude for weather data",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "success": {
+            "type": "object",
+            "properties": {
+              "temperature": { "type": "number" },
+              "conditions": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+This example demonstrates several key concepts:
+
+1. **API Chaining**: The flow connects two different APIs (location and weather) in sequence
+2. **Data Mapping**: The `links` section shows how data from the first API call (latitude/longitude) flows into the second API call
+3. **Parameter Definition**: The `fields.parameters` section defines the expected input format
+4. **Response Schema**: The `fields.responses` section specifies the structure of the successful response
+5. **Clear Identification**: Each component (flows, actions, sources) has clear, descriptive IDs and titles
+
+## Summary
+
+An `agents.json` file adhering to this schema enables a detailed definition of your orchestration logic. It supports:
+
+- Strict versioning via `agentsJson`
+- Clear metadata via `info`
+- Reusable API sources via `sources`
+- Fine-grained customization via `overrides`
+- Configurable workflows (`flows`), which contain:
+  - Actions to invoke APIs
+  - Links to bind data between steps
+  - Fields to define input parameters, optional request bodies, and expected response schemas
+
+For the full schema specification, please refer to our GitHub repository. 
