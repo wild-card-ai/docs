@@ -1,6 +1,6 @@
 ---
 title: 'agents.json'
-description: 'Agents.json is an open source specification that formally describes contracts for API and agent interactions, built on top of the OpenAPI standard.'
+description: 'Agents.json is an open-source JSON specification that formally describes contracts for API and AI agent interactions, built on top of the OpenAPI standard.'
 ---
 
 The full agents.json source can be found at [Github](https://github.com/wild-card-ai/agents-json).
@@ -8,21 +8,23 @@ For discussion, join us on [Discord](https://discord.gg/7AP6wSkVtQ)
 
 ## Motivations
 
-We faced the same problem many others building agents do: enabling our agents to interact with tools is painful and imprecise. Shoehorning APIs to play nicely with LLMs and then getting multiple API calls to execute successfully in a row is a painful trial and error process.
+Enabling AI agents to interact with APIs is difficult. We faced the same problem as many others building agents: altering APIs to work reliably with LLMs and executing multiple API calls successfully in a row is a trial and error process.
 
-We identified that APIs are designed for developers and not LLM contexts. Each developer building integrations for AI agents writes boilerplate, experiments with system prompts, optimizes tool definitions, and parses responses into vector stores - all for the same APIs.
+APIs are designed for developers and not LLMs. If you're building integrations for AI agents, you need to write boilerplate, experiment with system prompts, optimize tool definitions, and parse responses into vector stores - for each API. 
 
-So we implemented `agents.json`, a way to formally prescribe a set of API actions to an agent with the tools to make APIs work for LLMs. We built this for us and we’d love to share it with you, too.
+For example, the Gmail API has endpoints to search for threads, list the emails in a thread, and reply with an email given base64 RFC 822 content. Instead, LLMs need a clear, top-level directive that can handle all of this with one tool.
 
-## Why is agents.json built on OpenAPI? 
+**Why is `agents.json` built on OpenAPI?** — OpenAPI is the gold standard for describing how API endpoints work and can be executed. Most API providers have OpenAPI specs or have APIs that can be described fully by OpenAPI. These specs alone aren't sufficient for the age of AI agents, but provide great groundwork for API agent communication.
 
-[OpenAPI](https://www.openapis.org/) is the gold standard for describing how API endpoints work and can be executed. Most API providers have OpenAPI specs or have APIs that can be described fully by OpenAPI. These specs alone aren't sufficient for the age of AI agents, but provide great groundwork for API agent communication.
+Agents need multiple context-specific API calls to complete their tasks. This is because APIs are resource-based, modifying objects, whereas agents are action-based, delivering outcomes. However, APIs alone lack enough information to deliver cohesive outcomes.
+
+So we implemented `agents.json`, a schema to prescribe a set of API actions to an agent with the tools to make APIs work for LLMs. We built this for us and we're excited to share it with you.
 
 ## The agents.json File
 
-We're introducing `agents.json` - a json schema of structured contracts designed for AI agents. API providers use their existing OpenAPI spec to construct this file and agents inspect this file to run accurate series of API calls. 
+`agents.json` is a JSON schema of structured contracts designed for AI agents. API providers use their existing OpenAPI spec to construct this file and agents inspect this file to run accurate series of API calls. 
 
-Agents.json contains a set of enhancements to the OpenAPI spec - optimizing for endpoint discovery and LLM argument generation. These can include updating descriptions and adding examples.
+The `agents.json` spec contains a set of additions to the OpenAPI spec - optimizing for endpoint discovery and LLM argument generation. These can include updating descriptions and adding examples.
 
 Describing endpoints/data models without describing ***how*** they interact together is why AI agents struggle to take the right sequence of actions.
 
@@ -30,15 +32,15 @@ To solve this, we introduce flows and links. Flows are contracts with a series o
 
 We propose the file placed in `/.well-known/agents.json` so it is easily discoverable by agents accessing web services. For now, we compose a GitHub repository as a registry for available `agents.json` files.
 
-## The agents.json Executor
+## The agents.json Bridge
 
-The executor enables LLMs to load, parse, and run agents.json. Here's how it works:
+The Bridge enables LLMs to load, parse, and run `agents.json`. Here's how it works:
 
-1. A developer connects their agent with an agents.json file.
+1. A developer connects their agent with an `agents.json` file.
 2. The relevant chain(s) are chosen by the agent and arguments populated for a given task.
-3. The executor runs the chain(s).
+3. The Bridge runs the chain(s).
 
-The goal experience is a developer adds an agents.json file in their workflow and the correct set of actions for an integration is executed. The executor supports adding Basic, ApiKey, and Bearer authentication to requests.
+The goal experience is a developer adds an `agents.json` file in their workflow and the correct set of actions for an integration is executed. The Bridge supports adding Basic, ApiKey, and Bearer authentication to requests.
 
 ## Design Tenets
 
