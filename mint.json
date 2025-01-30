@@ -17,7 +17,7 @@
     }
   },
   "primaryTab": {
-    "name": "API Reference"
+    "name": "Wildcard Reference"
   },
   "topbarLinks": [
     {
@@ -31,18 +31,18 @@
   },
   "tabs": [
     {
-      "name": "Blog",
-      "url": "agentsjson"
+      "name": "Wildcard Reference",
+      "url": "api-reference"
     },
     {
-      "name": "API Reference",
-      "url": "api-reference"
+      "name": "agents.json Reference",
+      "url": "agentsjson"
     }
   ],
   "anchors": [],
   "navigation": [
     {
-      "group": "Blog",
+      "group": "Reference",
       "pages": [
         "agentsjson/introduction",
         "agentsjson/schema"
