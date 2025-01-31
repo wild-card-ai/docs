@@ -16,9 +16,7 @@ For example, the Gmail API has endpoints to search for threads, list the emails 
 
 **Why is `agents.json` built on OpenAPI?** — OpenAPI is the gold standard for describing how API endpoints work and can be executed. Most API providers have OpenAPI specs or have APIs that can be described fully by OpenAPI. These specs alone aren't sufficient for the age of AI agents, but provide great groundwork for API agent communication.
 
-Agents need multiple context-specific API calls to complete their tasks. This is because APIs are resource-based, modifying objects, whereas agents are action-based, delivering outcomes. However, APIs alone lack enough information to deliver cohesive outcomes.
-
-So we implemented `agents.json`, a schema to prescribe a set of API actions to an agent with the tools to make APIs work for LLMs. We built this for us and we're excited to share it with you.
+So we implemented `agents.json`. We built this for us and we're excited to share it with you.
 
 ## The agents.json File
 
