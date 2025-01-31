@@ -18,7 +18,7 @@ For example, the Gmail API has endpoints to search for threads, list the emails 
 
 So we implemented `agents.json`. We built this for us and we're excited to share it with you.
 
-## The agents.json File
+## The `agents.json` File
 
 `agents.json` is a JSON schema of structured contracts designed for AI agents. API providers use their existing OpenAPI spec to construct this file and agents inspect this file to run accurate series of API calls. 
 
@@ -28,7 +28,7 @@ Describing endpoints/data models without describing ***how*** they interact toge
 
 To solve this, we introduce flows and links. Flows are contracts with a series of 1 or more API calls that describe an outcome. Links describe how two actions are stitched together.
 
-We propose the file placed in `/.well-known/agents.json` so it is easily discoverable by agents accessing web services. For now, we compose a GitHub repository as a registry for available `agents.json` files.
+We propose the file placed in `/.well-known/agents.json` so it is easily discoverable by agents accessing web services. For now, we compose [a GitHub repository](https://github.com/wild-card-ai/agents-json) as a registry for available `agents.json` files.
 
 ## Wildcard Bridge
 
@@ -44,9 +44,6 @@ The goal experience is a developer adds an `agents.json` file in their workflow 
 
 1. **Build on top of the OpenAPI standard**
    Leverage existing standards and infrastructure where possible.
-
-2. **Prioritize open source**
-   Maintain trust, observability, and customizability.
 
 3. **Optimize schema for LLMs, not humans**
    Design with AI consumption in mind.
@@ -65,16 +62,16 @@ Rather than just optimizing UXs for web agents - enriching APIs will create more
 
 There are still open questions and more to be done. Starting the discussion now and building iteratively gives us a place to adapt alongside evolving paradigms in AI agent development. 
 
-### Open Questions
+### Feature Roadmap
 
-- OAuth
-- Memory & context management in links
-- Transforming fields at runtime
-- Rate-limits
-- Parallel Tasking
-- Conditionals/Failure Handling
-- Streaming
-- Pagination
+- [ ] OAuth
+- [ ] Memory & context management in links
+- [ ] Transforming fields at runtime
+- [ ] Rate-limits
+- [ ] Parallel Tasking
+- [ ] Conditionals/Failure Handling
+- [ ] Streaming
+- [ ] Pagination
 
 ## FAQs
 
