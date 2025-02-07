@@ -1,0 +1,23 @@
+---
+title: 'FAQ'
+---
+
+### Shouldn't API providers provide their own agent servers or "/agent" endpoints?
+
+We can begin building agents.json files immediately before official adoption by providers. No extra infrastructure changes, servers, or new endpoints. By putting responsibility of execution on the client - the paradigm abides by the same security and orchestration protocol of existing API based applications today. API providers can still choose to maintain official agents.json files.
+
+### Why route to an SDK instead of making HTTP requests directly?
+
+Although OpenAPI specs offer great descriptions of how to use APIs, code-gen with tools like OpenAPI generator and Swagger code-gen isn't perfect. Many APIs have edge cases that are accounted for in client SDKs and not in raw HTTP requests. For example, Gmail's RFC2822 format or Twilio's custom TwiML format are better parsed by code rather than generated as input by an LLM. We include copies of OpenAPI specs beside agents.json files in the repo for use.
+
+### How is this different than the Model Context Protocol?
+
+While MCP is designed to be stateful—relying on persistent connections between clients and servers for exchanging context and requests—Agents.json is stateless. Here, the agent independently manages all context. You can leverage your existing agent architecture and RAG systems to handle state effectively. Agents.json lets you build with existing pub/sub architectures, server-less environments, and infrastructure APIs already support today. And definitions are strongly typed by OpenAPI specs.
+
+### What about llms.txt?
+
+[llms.txt](https://llmstxt.org) is a great standard for making website content more readable to LLMs, but it doesn't address the challenges of **taking structured actions**. While llms.txt helps LLMs retrieve and interpret information, agents.json enables them to execute multi-step workflows reliably.
+
+### Why use OpenAPI?
+
+OpenAPI is a thoughtful standard that has evolved with the changes of HTTP APIs. It is the gold standard for describing how API endpoints work and can be executed. Most API providers have OpenAPI specs or have APIs that can be described fully by OpenAPI. These specs aren't quite sufficient for the age of agents, but do provide great groundwork for API agent communication.

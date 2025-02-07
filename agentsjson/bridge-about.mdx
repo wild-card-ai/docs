@@ -1,0 +1,13 @@
+---
+title: 'agents.json Bridge'
+---
+
+`agents.json` Bridge enables LLMs to load, parse, and run `agents.json`. Here's how it works:
+
+![](/static/3easysteps.png)
+
+1. A developer connects their agent with an `agents.json` file.
+2. The relevant chain(s) are chosen by the agent and arguments populated for a given task.
+3. Bridge runs the chain(s).
+
+The goal experience is a developer adds an `agents.json` file in their workflow and the correct set of actions for an integration is executed. Bridge supports adding Basic, ApiKey, and Bearer authentication to requests.

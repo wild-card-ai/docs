@@ -3,8 +3,8 @@
   "name": "Wildcard",
   "favicon": "/logo/asterisk.png",
   "logo": {
-    "light": "/logo/wildcard-logo1.png",
-    "dark": "/logo/wildcard-logo1.png",
+    "light": "/logo/agentsjson-by-wildcard-horizontal-logo.png",
+    "dark": "/logo/agentsjson-by-wildcard-horizontal-logo.png",
     "href": "https://wild-card.ai"
   },
   "colors": {
@@ -17,7 +17,7 @@
     }
   },
   "primaryTab": {
-    "name": "Wildcard Reference"
+    "name": "Documentation"
   },
   "topbarLinks": [
     {
@@ -31,92 +31,43 @@
   },
   "tabs": [
     {
-      "name": "Wildcard Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "agents.json Reference",
-      "url": "agentsjson"
+      "name": "Documentation",
+      "url": "documentation"
     }
   ],
   "anchors": [],
   "navigation": [
     {
-      "group": "Reference",
+      "group": "Overview",
       "pages": [
         "agentsjson/introduction",
+        "agentsjson/file-about",
+        "agentsjson/bridge-about",
+        "agentsjson/roadmap",
+        "agentsjson/contributing",
+        "agentsjson/faq"
+      ]
+    },
+    {
+      "group": "Reference",
+      "pages": [
+        "agentsjson/quickstart",
         "agentsjson/schema"
       ]
     },
     {
-      "group": "Getting Started",
+      "group": "About Wildcard",
       "pages": [
-        "introduction",
-        "quickstart",
-        "installation"
-      ]
-    },
-    {
-      "group": "Tools",
-      "pages": [
-        "tools/tools-directory",
-        "tools/using-tools",
-        "tools/action-class",
-        {
-          "group": "Supported APIs",
-          "pages": [
-            "tools/apis/gmail",
-            "tools/apis/airtable",
-            "tools/apis/brave",
-            "tools/apis/slack",
-            "tools/apis/google-calendar",
-            "tools/apis/youtube",
-            "tools/apis/notion",
-            "tools/apis/twilio",
-            "tools/apis/nyt",
-            "tools/apis/x",
-            "tools/apis/shopify",
-            "tools/apis/salesforce"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "OpenAI Tool Calling",
-      "pages": [
-        "openai/overview",
-        "openai/wildcard-client"
-      ]
-    },
-    {
-      "group": "Authentication",
-      "pages": [
-        "authentication/overview",
-        "authentication/oauth-setup",
-        "authentication/handling-expired-credentials"
-      ]
-    },
-    {
-      "group": "Structures",
-      "pages": [
-        "core/wildcard-base-client",
-        "core/custom-logging",
-        "core/processed-response",
-        "core/api-schema"
-      ]
-    },
-    {
-      "group": "Wildcard Chains",
-      "pages": [
-        "chains/chain-overview",
-        "chains/chain-types",
-        "chains/chain-examples",
-        "chains/chains-fastapi"
+        "about/company",
+        "about/contact",
+        "about/licenses"
       ]
     }
   ],
   "footerSocials": {
     "x": "https://x.com/wildcard_ai",
-    "linkedin": "https://www.linkedin.com/company/wild-card-ai"
+    "linkedin": "https://www.linkedin.com/company/wild-card-ai",
+    "github": "https://github.com/wild-card-ai/agents-json",
+    "discord": "https://discord.gg/7AP6wSkVtQ"
   }
 }

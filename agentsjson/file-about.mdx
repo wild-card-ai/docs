@@ -1,0 +1,13 @@
+---
+title: 'agents.json Specification'
+---
+
+The `agents.json` specification is a JSON schema of structured contracts designed for AI agents. API providers use their existing OpenAPI spec to construct this file and agents inspect this file to run accurate series of API calls. 
+
+The `agents.json` spec contains a set of additions to the OpenAPI spec - optimizing for endpoint discovery and LLM argument generation. These can include updating descriptions and adding examples.
+
+Describing endpoints/data models without describing ***how*** they interact together is why AI agents struggle to take the right sequence of actions.
+
+To solve this, we introduce flows and links. Flows are contracts with a series of 1 or more API calls that describe an outcome. Links describe how two actions are stitched together.
+
+We propose the file placed in `/.well-known/agents.json` so it is easily discoverable by agents accessing web services. For now, we compose [a GitHub repository](https://github.com/wild-card-ai/agents-json) as a registry for available `agents.json` files.
