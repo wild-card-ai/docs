@@ -11,6 +11,8 @@ published: January 30, 2025
 
 The full agents.json source code can be found at [Github](https://github.com/wild-card-ai/agents-json). For discussion, join us on [Discord](https://discord.gg/7AP6wSkVtQ)
 
+![](/static/LlmWorksDiagram.png)
+
 ## Motivations
 
 Enabling AI agents to interact with APIs is difficult. We faced the same problem as many others building agents: altering APIs to work reliably with LLMs and executing multiple API calls successfully in a row is a trial and error process.
@@ -19,9 +21,13 @@ APIs are designed for developers and not LLMs. If you're building integrations f
 
 For example, the Gmail API has endpoints to search for threads, list the emails in a thread, and reply with an email given base64 RFC 822 content. Instead, LLMs need a clear, top-level directive that can handle all of this with one tool.
 
+![](/static/TraditionalFlowDiagram.png)
+
 **Why is `agents.json` built on OpenAPI?** — OpenAPI is the gold standard for describing how API endpoints work and can be executed. Most API providers have OpenAPI specs or have APIs that can be described fully by OpenAPI. These specs alone aren't sufficient for the age of AI agents, but provide great groundwork for API agent communication.
 
 So we implemented `agents.json`. We built this for us and we're excited to share it with you.
+
+![](/static/AirgapFlowDiagram.png)
 
 ## Design Tenets
 
