@@ -1,0 +1,214 @@
+openapi: 3.0.0
+info:
+  title: FastAPI
+  version: 0.1.0
+  description: |
+    The Wildcard API allows finding the right tools to execute for natural language inputs.
+  contact:
+    name: Wildcard Support
+    url: https://wild-card.ai
+    email: info@wild-card.ai
+servers:
+  - url: https://queryfd.onrender.com
+paths:
+  /search:
+    get:
+      summary: Tool Selection
+      description: >
+        Performs a search within the specified collection using a natural language query to find the most relevant tool.
+      tags:
+        - Search
+        - Collections
+      operationId: semantic_search_search_get
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: The search query string.
+          schema:
+            type: string
+            title: Query
+        - name: collection_name
+          in: query
+          required: true
+          description: The name of the collection to search within.
+          schema:
+            type: string
+            title: Collection Name
+        - name: limit
+          in: query
+          required: false
+          description: The maximum number of results to return (default is 1).
+          schema:
+            type: integer
+            default: 1
+            title: Limit
+        - name: X-API-Key
+          in: header
+          required: true
+          description: The API key for authenticating the request.
+          schema:
+            type: string
+            title: X-Api-Key
+        - name: mode
+          in: query
+          required: false
+          description: The search mode to use (default is 'quality').
+          schema:
+            type: string
+            default: "quality"
+            enum: ["quality", "speed"]
+            title: Mode
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Unique identifier for the search result
+                        version:
+                          type: integer
+                          description: Version number of the result
+                        score:
+                          type: number
+                          format: float
+                          description: Relevance score of the search result
+                        payload:
+                          type: object
+                          properties:
+                            info:
+                              type: object
+                              properties:
+                                title:
+                                  type: string
+                                  description: Title of the API integration
+                                description:
+                                  type: string
+                                  description: Detailed description of the API integration
+                            flow:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  description: Unique identifier for the flow
+                                title:
+                                  type: string
+                                  description: Title of the flow
+                                description:
+                                  type: string
+                                  description: Description of the flow
+                        vector:
+                          type: array
+                          items:
+                            type: number
+                          nullable: true
+                          description: Vector representation of the result (if available)
+                        shard_key:
+                          type: string
+                          nullable: true
+                          description: Shard key for distributed storage
+                        order_value:
+                          type: number
+                          nullable: true
+                          description: Value used for ordering results
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /flow/{id}:
+    get:
+      summary: Get Flow
+      description: >
+        Retrieve detailed information about a specific flow using its unique identifier.
+      tags:
+        - Flow
+      operationId: get_flow_flow__id__get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier for the flow.
+          schema:
+            type: string
+            title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Body_ingest_agents_json_upload_collections_ingest_upload_post:
+      title: Body_ingest_agents_json_upload_collections_ingest_upload_post
+      description: Request body schema for uploading multiple agent JSON files.
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          title: Files
+          type: array
+          items:
+            type: string
+            format: binary
+    Body_ingest_agents_json_upload_zip_collections_ingest_upload_zip_post:
+      title: Body_ingest_agents_json_upload_zip_collections_ingest_upload_zip_post
+      description: Request body schema for uploading a ZIP archive of agent JSON files.
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          title: File
+          type: string
+          format: binary
+    HTTPValidationError:
+      title: HTTPValidationError
+      description: Schema for HTTP validation errors returned when request parameters fail validation.
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      title: ValidationError
+      description: Detailed information about a specific validation error.
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string

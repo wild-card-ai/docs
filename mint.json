@@ -26,13 +26,18 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Get Started",
-    "url": "https://cal.com/kaushik-wildcard/30min"
+    "name": "Github",
+    "url": "https://github.com/wild-card-ai/agents-json"
   },
   "tabs": [
     {
       "name": "Documentation",
       "url": "documentation"
+    },
+    {
+      "name": "API Reference",
+      "url": "api",
+      "openapi": "/wildcard_openapi.yaml"
     }
   ],
   "anchors": [],
