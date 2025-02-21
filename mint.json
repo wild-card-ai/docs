@@ -57,6 +57,7 @@
       "group": "Reference",
       "pages": [
         "agentsjson/quickstart",
+        "agentsjson/static-flows",
         "agentsjson/schema"
       ]
     },

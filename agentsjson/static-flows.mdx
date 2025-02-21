@@ -1,0 +1,79 @@
+---
+title: 'Static Flows'
+description: 'Learn how to create and run an agent using `agents.json`'
+---
+
+You can find the code for this example in [examples/single.ipynb](https://github.com/wild-card-ai/agents-json/blob/master/examples/single.ipynb).
+## Setup
+
+Install the agentsjson-core package and the openai package to create and run an agent:
+```bash
+pip install agentsjson
+pip install openai
+```
+
+Load the agents.json file:
+```python
+agents_json_url = "https://raw.githubusercontent.com/wild-card-ai/agents-json/refs/heads/master/agents_json/stripe/agents.json"
+
+from agentsjson.core.models import Flow
+from agentsjson.core.models.bundle import Bundle
+import agentsjson.core as core
+
+# load the agents.json file
+data: Bundle = core.load_agents_json(agents_json_url)
+flows = data.agentsJson.flows
+```
+
+## Creating and Running an Agent
+Set up your .env file with your API keys. We'll use Stripe for this agent.
+```python
+STRIPE_API_KEY="<your_stripe_api_key>"
+OPENAI_API_KEY="<your_openai_api_key>"
+```
+
+Set up your agent:
+```python
+from agentsjson.core import ToolFormat
+
+# Format the flows data for the prompt
+flows_context = core.flows_prompt(flows)
+
+# Create the system prompt
+system_prompt = f"""You are an AI assistant that helps users interact with the Stripe API.
+You have access to the following API flows:
+
+{flows_context}
+
+Analyze the user's request and use the appropriate API flows to accomplish the task.
+You must give your arguments for the tool call as Structued Outputs JSON with keys `parameters` and `requestBody`"""
+```
+
+Configure authentication:
+```python
+from agentsjson.core.models.auth import AuthType, BearerAuthConfig
+auth = BearerAuthConfig(type=AuthType.BEARER, token=STRIPE_API_KEY)
+```
+
+Run your agent:
+```python
+from openai import OpenAI
+from agentsjson.core.executor import execute_flows
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+query = "Create a new Stripe product for tie-die tshirts priced at $10, $15, and $30 for small, medium, and large sizes"
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": query}
+    ],
+    tools=core.flows_tools(flows, format=ToolFormat.OPENAI),
+    temperature=0
+)
+
+response = execute_flows(response, format=core.ToolFormat.OPENAI, bundle=data, flows=flows, auth=auth)
+
+response
+```

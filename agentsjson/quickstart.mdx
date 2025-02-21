@@ -1,79 +1,87 @@
 ---
 title: 'Python Quickstart'
-description: 'Learn how to create and run an agent using `agents.json`'
+description: 'Learn how to discover and use API actions with natural language'
 ---
 
-You can find the code for this example in [examples/single.ipynb](https://github.com/wild-card-ai/agents-json/blob/master/examples/single.ipynb).
-## Setup
+## Overview
 
-Install the agentsjson-core package and the openai package to create and run an agent:
-```bash
-pip install agentsjson
-pip install openai
-```
+Tool Search allows you to discover API actions using natural language queries. This makes it easy to find the right API endpoints without needing to read through documentation or understand complex API specifications.
 
-Load the agents.json file:
+## Action Discovery
+
+The first step is to use natural language to discover available actions. You can do this by making a request to the Wild Card API:
+
 ```python
-agents_json_url = "https://raw.githubusercontent.com/wild-card-ai/agents-json/refs/heads/master/agents_json/stripe/agents.json"
+import requests
 
-from agentsjson.core.models import Flow
-from agentsjson.core.models.bundle import Bundle
-import agentsjson.core as core
-
-# load the agents.json file
-data: Bundle = core.load_agents_json(agents_json_url)
-flows = data.agentsJson.flows
+query = "I need to create a product called Premium Access for $100"
+result = requests.get(
+    "https://api.wild-card.ai/search",
+    params={
+        "query": query,
+        "collection_id": "<YOUR-COLLECTION-ID>"
+    },
+    headers={"X-API-Key": "<YOUR-WILDCARD-API-KEY>"}
+)
 ```
 
-## Creating and Running an Agent
-Set up your .env file with your API keys. We'll use Stripe for this agent.
-```python
-STRIPE_API_KEY="<your_stripe_api_key>"
-OPENAI_API_KEY="<your_openai_api_key>"
-```
+The API will return relevant actions based on your natural language query. These actions are formatted in a way that can be directly used with language models.
 
-Set up your agent:
-```python
-from agentsjson.core import ToolFormat
+## Agent Integration
 
-# Format the flows data for the prompt
-flows_context = core.flows_prompt(flows)
+Once you have discovered the relevant actions, you can use them with your agent:
 
-# Create the system prompt
-system_prompt = f"""You are an AI assistant that helps users interact with the Stripe API.
-You have access to the following API flows:
-
-{flows_context}
-
-Analyze the user's request and use the appropriate API flows to accomplish the task.
-You must give your arguments for the tool call as Structued Outputs JSON with keys `parameters` and `requestBody`"""
-```
-
-Configure authentication:
-```python
-from agentsjson.core.models.auth import AuthType, BearerAuthConfig
-auth = BearerAuthConfig(type=AuthType.BEARER, token=STRIPE_API_KEY)
-```
-
-Run your agent:
 ```python
 from openai import OpenAI
-from agentsjson.core.executor import execute_flows
-client = OpenAI(api_key=OPENAI_API_KEY)
+from agentsjson.core.models.auth import BearerAuthConfig, AuthType
+from agentsjson.core.models.schema import AgentsJson
+from agentsjson import ToolFormat, execute, get_tools
 
-query = "Create a new Stripe product for tie-die tshirts priced at $10, $15, and $30 for small, medium, and large sizes"
+# Convert the API response into tool definitions
+agents_json = AgentsJson(**result.json())
+tools = get_tools(agents_json, ToolFormat.OPENAI)
 
-response = client.chat.completions.create(
+# Set up your OpenAI client
+client = OpenAI(api_key="<YOUR-OPENAI-API-KEY>")
+completion = client.chat.completions.create(
     model="gpt-4o",
     messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": query}
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that completes tasks."
+        },
+        {
+            "role": "user",
+            "content": query
+        }
     ],
-    tools=core.flows_tools(flows, format=ToolFormat.OPENAI),
-    temperature=0
+    tools=tools
 )
 
-response = execute_flows(response, format=core.ToolFormat.OPENAI, bundle=data, flows=flows, auth=auth)
-
-response
+# Execute the chosen action with authentication
+auth = BearerAuthConfig(type=AuthType.BEARER, token="<YOUR-STRIPE-API-KEY>")
+execute(agents_json, completion, ToolFormat.OPENAI, auth)
 ```
+
+## How It Works
+
+1. **Natural Language Query**: You start by describing what you want to do in plain English.
+2. **Action Discovery**: The Wild Card API searches through its collection of API specifications to find relevant actions.
+3. **Tool Definition**: The discovered actions are converted into a format that language models can understand and use.
+4. **Execution**: The language model chooses the appropriate action and executes it with the provided authentication.
+
+## Benefits
+
+- **Simplified API Integration**: No need to read through API documentation or understand complex specifications
+- **Natural Language Interface**: Describe what you want to do in plain English
+- **Automatic Tool Discovery**: Find the right API endpoints without manual searching
+- **Language Model Ready**: Tools are automatically formatted for use with OpenAI and other language models
+
+## Authentication
+
+The tool search and execution process requires two types of authentication:
+
+1. **Wild Card API Key**: Used for searching and discovering actions
+2. **Service API Key**: Used for executing the discovered actions (e.g., Stripe API key)
+
+Make sure to keep these API keys secure and never expose them in your code.
