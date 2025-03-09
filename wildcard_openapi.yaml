@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: FastAPI
-  version: 0.1.0
+  title: Wildcard API
+  version: 0.2.0
   description: |
     The Wildcard API allows finding the right tools to execute for natural language inputs.
   contact:
@@ -9,7 +9,7 @@ info:
     url: https://wild-card.ai
     email: info@wild-card.ai
 servers:
-  - url: https://queryfd.onrender.com
+  - url: https://api.wild-card.ai
 paths:
   /search:
     get:
@@ -28,37 +28,21 @@ paths:
           schema:
             type: string
             title: Query
-        - name: collection_name
+        - name: collection_id
           in: query
           required: true
-          description: The name of the collection to search within.
+          description: The ID of the collection to search within (e.g., "c58a5915-7b28-49b1-a28d-d81ffc6f63ea").
           schema:
             type: string
-            title: Collection Name
-        - name: limit
-          in: query
-          required: false
-          description: The maximum number of results to return (default is 1).
-          schema:
-            type: integer
-            default: 1
-            title: Limit
+            title: Collection ID
+            example: "c58a5915-7b28-49b1-a28d-d81ffc6f63ea"
         - name: X-API-Key
           in: header
           required: true
-          description: The API key for authenticating the request.
+          description: The API key for authenticating the request. You can find your API key in the Wildcard dashboard.
           schema:
             type: string
             title: X-Api-Key
-        - name: mode
-          in: query
-          required: false
-          description: The search mode to use (default is 'quality').
-          schema:
-            type: string
-            default: "quality"
-            enum: ["quality", "speed"]
-            title: Mode
       responses:
         '200':
           description: Successful Response
@@ -85,27 +69,115 @@ paths:
                         payload:
                           type: object
                           properties:
+                            agentsJson:
+                              type: string
+                              description: Version of the agents JSON format
                             info:
                               type: object
                               properties:
                                 title:
                                   type: string
                                   description: Title of the API integration
+                                version:
+                                  type: string
+                                  description: Version of the API integration
                                 description:
                                   type: string
                                   description: Detailed description of the API integration
-                            flow:
-                              type: object
-                              properties:
-                                id:
-                                  type: string
-                                  description: Unique identifier for the flow
-                                title:
-                                  type: string
-                                  description: Title of the flow
-                                description:
-                                  type: string
-                                  description: Description of the flow
+                            sources:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    description: Unique identifier for the source
+                                  path:
+                                    type: string
+                                    description: Path or URL to the source OpenAPI specification
+                            overrides:
+                              type: array
+                              description: List of overrides for the API integration
+                            flows:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    description: Unique identifier for the flow
+                                  title:
+                                    type: string
+                                    description: Title of the flow
+                                  description:
+                                    type: string
+                                    description: Description of the flow
+                                  actions:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        id:
+                                          type: string
+                                          description: Unique identifier for the action
+                                        sourceId:
+                                          type: string
+                                          description: Reference to the source ID
+                                        operationId:
+                                          type: string
+                                          description: Operation ID from the OpenAPI specification
+                                  links:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        origin:
+                                          type: object
+                                          properties:
+                                            actionId:
+                                              type: string
+                                              description: ID of the origin action
+                                            fieldPath:
+                                              type: string
+                                              description: Path to the field in the origin
+                                        target:
+                                          type: object
+                                          properties:
+                                            actionId:
+                                              type: string
+                                              description: ID of the target action
+                                            fieldPath:
+                                              type: string
+                                              description: Path to the field in the target
+                                  fields:
+                                    type: object
+                                    properties:
+                                      parameters:
+                                        type: array
+                                        description: List of parameters for the flow
+                                      requestBody:
+                                        type: object
+                                        properties:
+                                          content:
+                                            type: object
+                                            additionalProperties:
+                                              type: object
+                                              properties:
+                                                schema:
+                                                  type: object
+                                                  description: JSON Schema for the request body
+                                                example:
+                                                  type: object
+                                                  description: Example request body
+                                          required:
+                                            type: boolean
+                                            description: Whether the request body is required
+                                      responses:
+                                        type: object
+                                        properties:
+                                          success:
+                                            type: object
+                                            description: Schema for successful response
                         vector:
                           type: array
                           items:
